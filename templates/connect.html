@@ -159,7 +159,7 @@
                 <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Active
                     Network</label>
                 <select id="model-select"
-                    class="w-full bg-table-row border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
+                    class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
                     <option value="">Loading...</option>
                 </select>
             </div>
@@ -581,7 +581,17 @@ graph LR
 
         function plotMLPAct(layer) {
             const tokens = getTLabels(lastVisData.tokens);
-            const data = lastVisData.mlp[layer].input[0];
+            // New structure: lastVisData.layers[layer].mlp = {input: ..., output: ...}
+            if (!lastVisData.layers[layer].mlp) return;
+
+            const data = lastVisData.layers[layer].mlp.input[0]; // [T, D_ff]?
+            // backend: input: inp[0].detach().cpu() -> List. It was a Tensor [B, T, D] likely.
+            // B=1 -> [0] -> [T, D]
+
+            // Check dims. optimize_tensor_data converts tensor to list.
+            // If tensor was [1, T, D_ff]. List is [1][T][D_ff].
+            // So data[0] is [T, D_ff].
+
             const z = data[0].map((_, colIndex) => data.map(row => row[colIndex]));
             const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
@@ -594,8 +604,8 @@ graph LR
                 z: z, x: tokens, y: Array.from({ length: z.length }, (_, i) => `d${i}`),
                 type: 'heatmap', colorscale: 'RdBu', zmid: 0, showscale: false
             }], layout);
-            if (lastVisData.mlp_gates && lastVisData.mlp_gates[layer]) {
-                const gateData = lastVisData.mlp_gates[layer][0];
+            if (lastVisData.layers[layer].mlp_gate) {
+                const gateData = lastVisData.layers[layer].mlp_gate[0];
                 Plotly.newPlot('mlp-gate-plot', [{
                     z: gateData, x: Array.from({ length: gateData[0].length }, (_, i) => `d${i}`), y: tokens,
                     type: 'heatmap', colorscale: 'Viridis', showscale: false

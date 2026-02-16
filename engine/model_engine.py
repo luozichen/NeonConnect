@@ -213,15 +213,12 @@ class NeonModelEngine:
             
         def get_mlp_hook(layer_idx):
              def hook(module, inp, out):
-                 # inp[0] is x (input to mlp). out is result.
-                 # Check neon167 mlp. It has gate.
-                 # Capturing w2 input/output might be better?
-                 # User said "Adding gating vector is okayish".
-                 # Let's try to capture the gate if we can find it.
-                 # neon167 MLP: forward(x): c9=... gate=sigmoid(...) return w2(gate*w1(x))
-                 # Getting gate specifically requires hooking inside MLP or spying sigmoid.
-                 # Let's spy sigmoid for MLP gates.
-                 pass
+                 # inp[0] is the input to w2 (which is the gated hidden state) (after gate * w1(x))
+                 # out is the output of w2 (projection back to d_model)
+                 data_registry["layers"][layer_idx]["mlp"] = {
+                     "input": inp[0].detach().cpu(),
+                     "output": out.detach().cpu()
+                 }
              return hook
 
         # Spy sigmoid for MLP Gates (and Intent if needed, but we have Raw I)
@@ -230,31 +227,14 @@ class NeonModelEngine:
         def spy_sigmoid(input):
             val = input.detach().cpu()
             res = real_sigmoid(input)
-            # Heuristic: MLP gate is 3D [B, T, D] usually. Intent is 4D [B, H, T, D] inside attn?
-            # In neon167:
-            # Attn intent: `y = torch.sigmoid(intent) * attn_out`. Intent is [B, H, T, D] (transposed).
-            # MLP gate: `gate = torch.sigmoid(...)`. Gate is [B, T, D_ff] or such? 
-            # Wait, PureHydraMLP: c_gate_proj -> d_ff. So [B, T, d_ff].
             
             # Simple heuristic: if we are inside MLP (how do we know?)
-            # Let's just store based on logic flow.
-            # Block 0: Attn (sigmoid I) -> MLP (sigmoid G)
-            
-            # Actually, we have "raw_i" which IS the intent before sigmoid (and convolution).
-            # The user wants "Gating vector".
             if val.dim() == 3: 
-                # Likely MLP gate [B, T, D_ff]
-                # We can try to assign to current layer. 
-                # This depends on execution order: Attn then MLP.
-                # sdpa_counter is incremented inside SDPA.
-                # SDPA happens BEFORE MLP in the block.
-                # So if sdpa_counter is K (meaning we just finished attn for layer K-1), we are in MLP for layer K-1?
-                # No, sdpa_counter increments at END of SDPA.
-                # Layer 0: SDPA (counter becomes 1) -> MLP.
-                # So if counter is 1, we are in Layer 0 MLP.
+                # MLP gate [B, T, D_ff]
+                # Based on execution flow: Layer 0 Attn -> Layer 0 MLP
                 idx = sdpa_counter[0] - 1
                 if 0 <= idx < len(data_registry["layers"]):
-                    data_registry["layers"][idx]["mlp_gate"] = res.detach().cpu() # Capture OUTPUT of sigmoid
+                    data_registry["layers"][idx]["mlp_gate"] = res.detach().cpu()
             return res
 
         for i, block in enumerate(model.blocks):
@@ -266,6 +246,9 @@ class NeonModelEngine:
             hooks.append(block.attn.conv_k.register_forward_hook(get_conv_hook(i, "conv_k", config['n_head'], config['d_model'] // config['n_head'])))
             hooks.append(block.attn.conv_v.register_forward_hook(get_conv_hook(i, "conv_v", config['n_head'], config['d_model'] // config['n_head'])))
             hooks.append(block.attn.conv_i.register_forward_hook(get_conv_hook(i, "conv_i", config['n_head'], config['d_model'] // config['n_head'])))
+            
+            # MLP
+            hooks.append(block.mlp.w2.register_forward_hook(get_mlp_hook(i)))
 
         F.scaled_dot_product_attention = spy_sdpa
         torch.sigmoid = spy_sigmoid
