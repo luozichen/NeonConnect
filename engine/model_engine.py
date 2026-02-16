@@ -205,10 +205,17 @@ class NeonModelEngine:
              """Recursively convert tensors to lists, rounding floats to 4 decimals to save space."""
              if isinstance(t, torch.Tensor):
                  t = t.float().cpu().numpy()
+             
+             if isinstance(t, (np.ndarray, np.generic)):
                  # Replace inf/-inf with finite numbers to prevent JSON errors
                  # NaN -> 0, Inf -> 1e5, -Inf -> -1e5 (Safe for visualization scaling)
                  t = np.nan_to_num(t, nan=0.0, posinf=1e5, neginf=-1e5)
-                 return np.round(t, 4).tolist()
+                 # Round and convert to list
+                 if isinstance(t, np.ndarray):
+                    return np.round(t, 4).tolist()
+                 else:
+                    return float(np.round(t, 4))
+             
              if isinstance(t, list): return [optimize_tensor_data(i) for i in t]
              if isinstance(t, dict): return {k: optimize_tensor_data(v) for k, v in t.items()}
              return t
@@ -224,7 +231,7 @@ class NeonModelEngine:
             "mlp_gates": optimize_tensor_data(data_registry["mlp_gates"]),
             "mlp": optimize_tensor_data(data_registry["mlp"]),
             "conv": optimize_tensor_data(data_registry["conv"]),
-            "top_k_probs": top_probs.tolist(),
+            "top_k_probs": optimize_tensor_data(top_probs),
             "top_k_tokens": top_tokens,
             "config": config
         }
