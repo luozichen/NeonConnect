@@ -204,10 +204,10 @@ class NeonModelEngine:
         def optimize_tensor_data(t):
              """Recursively convert tensors to lists, rounding floats to 4 decimals to save space."""
              if isinstance(t, torch.Tensor):
-                 # Convert to half precision first to save memory if dealing with large arrays? 
-                 # For JSON serialization, we just need standard python lists of floats.
-                 # Rounding is key.
-                 t = t.float().numpy() 
+                 t = t.float().cpu().numpy()
+                 # Replace inf/-inf with finite numbers to prevent JSON errors
+                 # NaN -> 0, Inf -> 1e5, -Inf -> -1e5 (Safe for visualization scaling)
+                 t = np.nan_to_num(t, nan=0.0, posinf=1e5, neginf=-1e5)
                  return np.round(t, 4).tolist()
              if isinstance(t, list): return [optimize_tensor_data(i) for i in t]
              if isinstance(t, dict): return {k: optimize_tensor_data(v) for k, v in t.items()}
