@@ -7,6 +7,10 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -39,6 +43,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
         .tab-btn.active { border-bottom: 2px solid #6366f1; color: #6366f1; }
         .plot-container { min-height: 400px; width: 100%; }
+        .mermaid { background: transparent; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden font-sans">
@@ -90,10 +95,11 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <div class="flex border-b border-border bg-surface/5 px-4">
-                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors active" data-tab="single-head">Single Head</button>
-                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="all-heads">All Heads</button>
-                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="mlp-acts">MLP Activations</button>
+            <div class="flex border-b border-border bg-surface/5 px-4 overflow-x-auto">
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors active" data-tab="architecture">Architecture</button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="single-head">Single Head Detail</button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="all-heads">All Heads Grid</button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="mlp-acts">MLP & Gate</button>
                 <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="next-token">Next Token</button>
                 <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="inference">Live Chat</button>
             </div>
@@ -162,6 +168,10 @@
                     </div>
                 </div>
             `;
+            // If architecture tab is active, reload it to maybe change diagram
+            if (document.querySelector('.tab-btn.active').dataset.tab === 'architecture') {
+                renderArchitecture();
+            }
         }
 
         modelSelect.addEventListener('change', (e) => selectModel(e.target.value));
@@ -203,8 +213,20 @@
         visualizeBtn.addEventListener('click', visualize);
 
         function renderTab(tabId) {
-            if (!lastVisData) return;
             vizContainer.innerHTML = '';
+            
+            if (tabId === 'architecture') {
+                renderArchitecture();
+                return;
+            }
+
+            if (!lastVisData) {
+                vizContainer.innerHTML = `
+                    <div class="text-center py-20 text-gray-500">
+                        <p>Please click "Visualize" to analyze the model response first.</p>
+                    </div>`;
+                return;
+            }
 
             if (tabId === 'single-head') {
                 renderSingleHead();
@@ -225,6 +247,51 @@
 
         function getTokenLabels(tokens) {
             return tokens.map((t, i) => `${i}:${cleanToken(t)}`);
+        }
+
+        function renderArchitecture() {
+            // Neon167 Diagram
+            const mermaidCode = `
+graph TD
+    A["Input Tokens [B, 256]"] --> B["Embedding Matrix [1024, 272]"]
+    B --> C["Residual Stream [B, 256, 272]"]
+    
+    subgraph "Block (x4)"
+    C --> D["RMSNorm"]
+    D --> E["C_Attn Linear [272, 1088]"]
+    E --> F["QKVI Split [4x 272]"]
+    F --> G["K3 DepthConv [272, 1, 3]"]
+    G --> H["4-Head Split [68-dim]"]
+    H --> I["SDPA + Intent Gate"]
+    I --> J["C_Proj Linear [272, 272]"]
+    J --> K["( + ) Residual Connection"]
+    
+    K --> L["RMSNorm"]
+    L --> M["K9 DepthConv [272, 1, 9]"]
+    M --> N["Hydra Gate [272, 1072]"]
+    L --> O["Content W1 [272, 1072]"]
+    O --> P["Hadamard Product (*)"]
+    N --> P
+    P --> Q["W2 Linear [1072, 272]"]
+    Q --> R["( + ) Residual Connection"]
+    end
+    
+    R --> S["Final RMSNorm"]
+    S --> T["LM Head Linear [272, 1024]"]
+    T --> U["Next Token Probabilities"]
+            `;
+            
+            vizContainer.innerHTML = `
+                <div class="flex justify-center p-4">
+                    <div class="mermaid text-center bg-surface p-4 rounded-xl border border-border">
+                        ${mermaidCode}
+                    </div>
+                </div>
+            `;
+            // Trigger mermaid render
+            import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs').then(m => {
+                m.default.contentLoaded(); 
+            });
         }
 
         function renderSingleHead() {
@@ -248,15 +315,32 @@
                             </select>
                         </div>
                     </div>
-                    <div id="attn-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
-                    <div id="received-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-mono text-gray-400">Attention Matrix</h4>
+                            <div id="attn-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-mono text-gray-400">Intent Vector (I)</h4>
+                            <div id="intent-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-mono text-gray-400">Query Vector (Q)</h4>
+                            <div id="q-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-mono text-gray-400">Key Vector (K)</h4>
+                            <div id="k-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
+                        </div>
+                    </div>
                 </div>
             `;
 
             const update = () => {
                 const l = parseInt(document.getElementById('layer-sel').value);
                 const h = parseInt(document.getElementById('head-sel').value);
-                plotSingleHead(l, h);
+                plotSingleHeadDetailed(l, h);
             };
 
             document.getElementById('layer-sel').addEventListener('change', update);
@@ -264,99 +348,137 @@
             update();
         }
 
-        function plotSingleHead(layer, head) {
+        function plotSingleHeadDetailed(layer, head) {
             const tokens = getTokenLabels(lastVisData.tokens);
-            // lastVisData.attn is [layer][batch][head][q][k]
-            const z = lastVisData.attn[layer][0][head];
-
-            const data = [{
-                z: z,
-                x: tokens,
-                y: tokens,
-                type: 'heatmap',
-                colorscale: 'Blues',
-                showscale: true
-            }];
-
-            const layout = {
-                title: `Layer ${layer} - Head ${head} Attention Weights`,
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#a1a1aa', size: 10 },
-                xaxis: { tickangle: 45, automargin: true },
-                yaxis: { autorange: 'reversed', automargin: true },
-                margin: { l: 50, r: 50, b: 100, t: 50 }
+            // Attn: [layer][batch][head][q][k]
+            const zAttn = lastVisData.attn[layer][0][head];
+            
+            // Q, K, V, I: [layer][batch][n_head][T][head_dim] -> we need [T][head_dim] for specific head
+            // Wait, my model_engine structure for Q/K/V/I might be [layer][batch][T][n_head][head_dim] or flattened?
+            // Neon167.py: q = q.view(B, T, self.n_head, self.head_dim)
+            // Hook captures tensor.
+            // Let's assume structure is [batch, T, n_head, head_dim] based on code order.
+            
+            // But wait, the hook in model_engine.py:
+            // logits = q @ k.transpose(-2, -1) * s
+            // q input to SDPA is usually [B, n_head, T, head_dim].
+            // Neon167.py: q, k, v = q.transpose(1, 2), ... -> [B, n_head, T, head_dim]
+            // So lastVisData.q[layer][0] is [n_head, T, head_dim].
+            
+            const head_dim = lastVisData.q[layer][0][0][0].length; // Check dims
+            
+            const getVectorData = (source, l, h) => {
+                // source[l][0] is [n_head, T, head_dim]
+                const headData = source[l][0][h]; // [T, head_dim]
+                // Transpose for heatmap (Dimensions on X, Tokens on Y)
+                // return headData; 
+                // Actually Plotly heatmap: z is array of arrays.
+                // We want Tokens on Y axis? Or X?
+                // Let's put Tokens on Y, Dims on X.
+                return headData;
             };
 
-            Plotly.newPlot('attn-plot', data, layout, {responsive: true});
+            const plotHeatmap = (divId, zData, title, colorscale='RdBu') => {
+                Plotly.newPlot(divId, [{
+                    z: zData,
+                    x: Array.from({length: zData[0].length}, (_, i) => `d${i}`),
+                    y: tokens,
+                    type: 'heatmap', colorscale: colorscale, zmid: 0
+                }], {
+                    title: title,
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: '#a1a1aa', size: 9 },
+                    xaxis: { title: 'Dimension', showticklabels: false },
+                    yaxis: { autorange: 'reversed', showticklabels: false },
+                    margin: { l: 40, r: 20, b: 30, t: 30 }
+                }, {displayModeBar: false});
+            };
 
-            // Attention Received
-            const received = z[0].map((_, colIndex) => z.map(row => row[colIndex]).reduce((a, b) => a + b, 0));
-            const dataRec = [{
-                x: tokens,
-                y: received,
-                type: 'bar',
-                marker: { color: '#6366f1' }
-            }];
-            const layoutRec = {
-                title: 'Attention Received per Token',
+            // Plot Attn Matrix
+            Plotly.newPlot('attn-plot', [{
+                z: zAttn, x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues'
+            }], {
+                title: 'Attention Matrix',
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#a1a1aa', size: 10 },
-                xaxis: { tickangle: 45, automargin: true },
-                yaxis: { gridcolor: '#2a2a2f' },
-                margin: { l: 50, r: 50, b: 100, t: 50 }
-            };
-            Plotly.newPlot('received-plot', dataRec, layoutRec, {responsive: true});
+                font: { color: '#a1a1aa', size: 9 },
+                xaxis: { showticklabels: false },
+                yaxis: { autorange: 'reversed', showticklabels: false },
+                margin: { l: 40, r: 20, b: 30, t: 30 }
+            }, {displayModeBar: false});
+
+            // Plot Vectors
+            plotHeatmap('q-plot', getVectorData(lastVisData.q, layer, head), 'Query (Q)');
+            plotHeatmap('k-plot', getVectorData(lastVisData.k, layer, head), 'Key (K)');
+            // Intent is stored in lastVisData.intent
+            plotHeatmap('intent-plot', getVectorData(lastVisData.intent, layer, head), 'Intent (I)', 'Viridis');
         }
 
         function renderAllHeads() {
             const n_layers = lastVisData.config.n_layers;
+            const n_heads = lastVisData.config.n_head;
+            const tokens = getTokenLabels(lastVisData.tokens);
+            
+            // Grid CSS
+            const gridStyle = `grid-template-columns: repeat(${n_heads}, minmax(0, 1fr));`;
+            
+            let html = `<div class="grid gap-2" style="${gridStyle}">`;
+            
+            // Headers
+            for(let h=0; h<n_heads; h++) {
+                html += `<div class="text-center text-xs font-mono text-gray-500">Head ${h}</div>`;
+            }
+            
+            for(let l=0; l<n_layers; l++) {
+                for(let h=0; h<n_heads; h++) {
+                    const id = `grid-l${l}-h${h}`;
+                    html += `<div id="${id}" class="aspect-square bg-surface/20 border border-border rounded"></div>`;
+                }
+            }
+            html += `</div>`;
+            
+            // Row Labels (tricky with grid, maybe just use tooltips or overlay)
+            // Let's wrap rows? No, CSS grid is easier.
+            // Just add a side column? 
+            // Let's stick to simple grid first.
+            
             vizContainer.innerHTML = `
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-xs font-mono text-gray-500 mb-1">Layer</label>
-                        <select id="layer-sel-all" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm max-w-xs">
-                            ${Array.from({length: n_layers}, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
-                        </select>
+                <div class="flex">
+                    <div class="flex flex-col justify-around mr-2 pt-6 pb-2">
+                        ${Array.from({length: n_layers}, (_, i) => `<div class="text-xs font-mono text-gray-500 rotate-180" style="writing-mode: vertical-rl">Layer ${i}</div>`).join('')}
                     </div>
-                    <div id="all-heads-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <div class="flex-1 space-y-4">
+                        <div class="flex justify-between px-2">
+                            ${Array.from({length: n_heads}, (_, i) => `<div class="text-xs font-mono text-gray-500">Head ${i}</div>`).join('')}
+                        </div>
+                        <div class="grid gap-2" style="grid-template-columns: repeat(${n_heads}, 1fr);">
+                            ${Array.from({length: n_layers * n_heads}, (_, i) => {
+                                const l = Math.floor(i / n_heads);
+                                const h = i % n_heads;
+                                return `<div id="grid-l${l}-h${h}" class="aspect-square bg-surface/20 border border-border rounded relative group">
+                                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs pointer-events-none transition-opacity">L${l}H${h}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
                 </div>
             `;
 
-            const update = () => {
-                const l = parseInt(document.getElementById('layer-sel-all').value);
-                plotAllHeads(l);
-            };
-            document.getElementById('layer-sel-all').addEventListener('change', update);
-            update();
-        }
-
-        function plotAllHeads(layer) {
-            const grid = document.getElementById('all-heads-grid');
-            grid.innerHTML = '';
-            const n_heads = lastVisData.config.n_head;
-            const tokens = getTokenLabels(lastVisData.tokens);
-
-            for (let h = 0; h < n_heads; h++) {
-                const id = `head-plot-${h}`;
-                const div = document.createElement('div');
-                div.id = id;
-                div.className = 'h-80 bg-surface/20 rounded-xl border border-border';
-                grid.appendChild(div);
-
-                const z = lastVisData.attn[layer][0][h];
-                Plotly.newPlot(id, [{
-                    z: z, x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false
-                }], {
-                    title: `Head ${h}`,
-                    paper_bgcolor: 'rgba(0,0,0,0)',
-                    plot_bgcolor: 'rgba(0,0,0,0)',
-                    font: { color: '#a1a1aa', size: 8 },
-                    xaxis: { showticklabels: false },
-                    yaxis: { autorange: 'reversed', showticklabels: false },
-                    margin: { l: 10, r: 10, b: 10, t: 30 }
-                }, {displayModeBar: false});
+            // Plot
+            for(let l=0; l<n_layers; l++) {
+                for(let h=0; h<n_heads; h++) {
+                    const z = lastVisData.attn[l][0][h];
+                    Plotly.newPlot(`grid-l${l}-h${h}`, [{
+                        z: z, type: 'heatmap', colorscale: 'Blues', showscale: false
+                    }], {
+                        margin: { l: 0, r: 0, b: 0, t: 0 },
+                        xaxis: { showticklabels: false, showgrid: false, zeroline: false },
+                        yaxis: { autorange: 'reversed', showticklabels: false, showgrid: false, zeroline: false },
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                        plot_bgcolor: 'rgba(0,0,0,0)'
+                    }, {staticPlot: true}); // Static for speed
+                }
             }
         }
 
@@ -364,90 +486,150 @@
             const n_layers = lastVisData.config.n_layers;
             vizContainer.innerHTML = `
                 <div class="space-y-6">
-                    <div id="mlp-norm-plot" class="plot-container bg-surface/20 rounded-xl border border-border"></div>
-                    <div class="h-[1px] bg-border"></div>
                     <div>
                         <label class="block text-xs font-mono text-gray-500 mb-1">Layer Details</label>
                         <select id="mlp-layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm max-w-xs">
                             ${Array.from({length: n_layers}, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
                         </select>
                     </div>
-                    <div id="mlp-act-plot" class="plot-container bg-surface/20 rounded-xl border border-border" style="height: 600px;"></div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-mono text-gray-400">MLP Hidden State (Content)</h4>
+                            <div id="mlp-act-plot" class="plot-container bg-surface/20 rounded-xl border border-border" style="height: 500px;"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-mono text-gray-400">MLP Conv Gate (Filter)</h4>
+                            <div id="mlp-gate-plot" class="plot-container bg-surface/20 rounded-xl border border-border" style="height: 500px;"></div>
+                        </div>
+                    </div>
                 </div>
             `;
 
-            plotMLPNorms();
             const update = () => plotMLPAct(parseInt(document.getElementById('mlp-layer-sel').value));
             document.getElementById('mlp-layer-sel').addEventListener('change', update);
             update();
         }
 
-        function plotMLPNorms() {
-            const tokens = getTokenLabels(lastVisData.tokens);
-            const n_layers = lastVisData.config.n_layers;
-            
-            // lastVisData.mlp is [layer]{input: [batch, T, d_ff], output: [batch, T, d_model]}
-            const z = [];
-            for (let l = 0; l < n_layers; l++) {
-                const out = lastVisData.mlp[l].output[0]; // [T, d_model]
-                const norms = out.map(row => Math.sqrt(row.reduce((a, b) => a + b*b, 0)));
-                z.push(norms);
-            }
-
-            Plotly.newPlot('mlp-norm-plot', [{
-                z: z, x: tokens, y: Array.from({length: n_layers}, (_, i) => `Layer ${i}`),
-                type: 'heatmap', colorscale: 'Oranges'
-            }], {
-                title: 'MLP Output Norms (Signal Strength)',
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#a1a1aa', size: 10 },
-                xaxis: { tickangle: 45, automargin: true },
-                yaxis: { automargin: true },
-                margin: { l: 80, r: 50, b: 100, t: 50 }
-            });
-        }
-
         function plotMLPAct(layer) {
             const tokens = getTokenLabels(lastVisData.tokens);
-            const data = lastVisData.mlp[layer].input[0]; // [T, d_ff]
-            
-            // Transpose for Heatmap: [d_ff, T]
+            // MLP input: [batch, T, d_ff]
+            const data = lastVisData.mlp[layer].input[0]; 
             const z = data[0].map((_, colIndex) => data.map(row => row[colIndex]));
 
             Plotly.newPlot('mlp-act-plot', [{
                 z: z, x: tokens, y: Array.from({length: z.length}, (_, i) => `d${i}`),
                 type: 'heatmap', colorscale: 'RdBu', zmid: 0
             }], {
-                title: `MLP Hidden States - Layer ${layer} (${z.length} dims)`,
+                title: `Content`,
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { color: '#a1a1aa', size: 10 },
                 xaxis: { tickangle: 45, automargin: true },
                 yaxis: { automargin: true, showticklabels: false },
-                margin: { l: 50, r: 50, b: 100, t: 50 }
+                margin: { l: 50, r: 20, b: 50, t: 30 }
             });
+
+            // Gate (Conv9)
+            // conv list is flat. Per layer we have [Q, K, V, I, MLP].
+            // So MLP index = layer * 5 + 4
+            const convIndex = layer * 5 + 4;
+            if (lastVisData.conv && lastVisData.conv[convIndex]) {
+                const gateData = lastVisData.conv[convIndex].data[0]; // [C, T] or [d_model, T]
+                // Transpose? No, usually visualizer.py showed it as [Dims, T]
+                // Let's check format. Engine: out.detach().cpu().
+                // Conv1d output is [Batch, Channel, Length].
+                // So gateData is [Channel, Length].
+                // We want Length on Y axis for consistency?
+                // Visualizer usually does Length on X?
+                // My other plots have Tokens on Y? No, `x: tokens, y: tokens` for attn.
+                // Single Head vectors: x: dims, y: tokens.
+                // So let's align: x: dims, y: tokens.
+                // gateData is [D, T]. We need [T, D] for x=D, y=T.
+                
+                // Transpose gateData
+                const T = gateData[0].length;
+                const D = gateData.length;
+                const zGate = [];
+                for(let t=0; t<T; t++) {
+                    const row = [];
+                    for(let d=0; d<D; d++) row.push(gateData[d][t]);
+                    zGate.push(row);
+                }
+                
+                // Now zGate is [T][D]. 
+                // But wait, my plotHeatmap helper takes zData where rows are Y.
+                // So if Y is Tokens, then zData should be [T][D].
+                // But my single head vectors helper above passed [T][D] but mapped Y to Tokens.
+                // Wait, single head vectors: `source[l][0][h]` is [T, head_dim].
+                // The Plotly heatmap `z` expects array of arrays (rows).
+                // `y: tokens` (length T).
+                // So `z` must have T rows. Correct.
+                
+                // So for gate, we also want T rows.
+                // zGate is [T][D].
+                // But we want Dims on X.
+                // So z: zGate (T rows, D cols)
+                // y: tokens (T)
+                // x: dims (D)
+                
+                // Wait, heatmap `z` is usually [y][x].
+                // If y=Tokens, then z[0] corresponds to Token 0.
+                // z[0] is an array of values for X (Dims).
+                // So z must be [T][D].
+                
+                // My conv data `gateData` is [D][T].
+                // So `gateData[d][t]`
+                // I need `z[t][d]`.
+                
+                // Let's transpose:
+                const zFinal = [];
+                for(let t=0; t<T; t++) {
+                    const row = [];
+                    for(let d=0; d<D; d++) {
+                        row.push(gateData[d][t]);
+                    }
+                    zFinal.push(row);
+                }
+
+                Plotly.newPlot('mlp-gate-plot', [{
+                    z: zFinal, // [T][D] - actually, wait.
+                    // If Z is [Rows][Cols].
+                    // Rows match Y. Cols match X.
+                    // Y is Tokens (T). X is Dims (D).
+                    // So Z should be [T][D].
+                    // Correct.
+                    
+                    x: Array.from({length: D}, (_, i) => `d${i}`),
+                    y: tokens,
+                    type: 'heatmap', colorscale: 'Viridis'
+                }], {
+                    title: `Gate Pattern (Conv k=9)`,
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: '#a1a1aa', size: 10 },
+                    xaxis: { tickangle: 45, automargin: true },
+                    yaxis: { automargin: true, showticklabels: false },
+                    margin: { l: 50, r: 20, b: 50, t: 30 }
+                });
+            } else {
+                document.getElementById('mlp-gate-plot').innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No Conv Data</div>';
+            }
         }
 
         function renderNextToken() {
             vizContainer.innerHTML = `<div id="probs-plot" class="plot-container bg-surface/20 rounded-xl border border-border" style="height: 600px;"></div>`;
             
             const logits = lastVisData.logits;
-            // Softmax
             const maxLogit = Math.max(...logits);
             const exps = logits.map(l => Math.exp(l - maxLogit));
             const sumExps = exps.reduce((a, b) => a + b, 0);
             const probs = exps.map(e => e / sumExps);
 
-            // Get top 20
             const indexed = probs.map((p, i) => ({p, i}));
             indexed.sort((a, b) => b.p - a.p);
             const top20 = indexed.slice(0, 20);
 
-            // We don't have the tokenizer decode map in JS easily for all IDs, 
-            // but we can show IDs and maybe fetch some? 
-            // For now, let's just show indices.
-            
             Plotly.newPlot('probs-plot', [{
                 x: top20.map(x => x.p),
                 y: top20.map(x => `ID:${x.i}`),
