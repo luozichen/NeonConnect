@@ -148,10 +148,12 @@ class NeonModelEngine:
             
         input_tensor = torch.tensor([ids], device=self.device)
         
+        # Enhanced data registry
         data_registry = {
             "attn": [],
             "q": [], "k": [], "v": [],
-            "intent": [],
+            "attn_intents": [],
+            "mlp_gates": [],
             "mlp": [],
             "conv": []
         }
@@ -159,7 +161,6 @@ class NeonModelEngine:
         # SDPA Hook
         real_sdpa = F.scaled_dot_product_attention
         def spy_sdpa(q, k, v, *args, **kwargs):
-            # q, k, v input to SDPA are usually [B, n_head, T, head_dim]
             data_registry["q"].append(q.detach().cpu())
             data_registry["k"].append(k.detach().cpu())
             data_registry["v"].append(v.detach().cpu())
@@ -173,20 +174,22 @@ class NeonModelEngine:
             data_registry["attn"].append(w.detach().cpu())
             return w @ v
 
-        # Intent Hook
+        # Sigmoid Hook (Separates Intent from MLP Gate)
         real_sigmoid = torch.sigmoid
         def spy_sigmoid(input):
-            # Capture inputs to sigmoid. For Neon167 Attention it's the Intent vector.
-            # Shape should be [B, n_head, T, head_dim] or [B, T, C]
-            if input.dim() in [3, 4]:
-                data_registry["intent"].append(input.detach().cpu())
+            val = input.detach().cpu()
+            if val.dim() == 4:
+                # Likely Attention Intent: [B, Head, T, D]
+                data_registry["attn_intents"].append(val)
+            elif val.dim() == 3:
+                # Likely MLP Gate: [B, T, D_ff]
+                data_registry["mlp_gates"].append(val)
             return real_sigmoid(input)
 
         # Conv Hook
         real_conv1d = F.conv1d
         def spy_conv1d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
             out = real_conv1d(input, weight, bias, stride, padding, dilation, groups)
-            # Capture depthwise intermediate states
             if groups > 1 and out.dim() == 3:
                 data_registry["conv"].append({
                     "kernel": weight.shape[2],
@@ -233,7 +236,8 @@ class NeonModelEngine:
             "q": to_list(data_registry["q"]),
             "k": to_list(data_registry["k"]),
             "v": to_list(data_registry["v"]),
-            "intent": to_list(data_registry["intent"]),
+            "attn_intents": to_list(data_registry["attn_intents"]),
+            "mlp_gates": to_list(data_registry["mlp_gates"]),
             "mlp": to_list(data_registry["mlp"]),
             "conv": to_list(data_registry["conv"]),
             "logits": to_list(last_logits),

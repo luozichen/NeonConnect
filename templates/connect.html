@@ -9,11 +9,12 @@
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        window.mermaid = mermaid;
         mermaid.initialize({ 
             startOnLoad: true, 
             theme: 'dark',
             securityLevel: 'loose',
-            flowchart: { useMaxWidth: true, htmlLabels: true }
+            flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' }
         });
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -48,15 +49,15 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
         .tab-btn.active { border-bottom: 2px solid #6366f1; color: #6366f1; }
         .plot-container { min-height: 350px; width: 100%; }
-        .mermaid { background: transparent; display: flex; justify-content: center; }
-        svg { max-width: 100% !important; }
+        .mermaid-wrapper { width: 100%; overflow-x: auto; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 1rem; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden font-sans text-sm md:text-base">
     <!-- Header -->
     <header class="h-16 border-b border-border flex items-center justify-between px-6 bg-surface/50 backdrop-blur-md z-20 shrink-0">
         <div class="flex items-center gap-3">
-            <img src="{{ url_for('static', filename='logo.png') }}" class="w-8 h-8 rounded-lg">
+            <img src="{{ url_for('static', filename='logo.png') }}" class="w-8 h-8 rounded-lg shadow-lg shadow-primary/10">
             <h1 class="text-xl font-bold font-display tracking-tight">
                 <span class="text-code">N</span><span class="text-thought">e</span><span class="text-primary">o</span><span class="text-search">n</span> <span class="text-gray-400">CONNECT</span>
             </h1>
@@ -73,7 +74,7 @@
         <!-- Sidebar -->
         <aside class="w-72 border-r border-border flex flex-col bg-surface/30 shrink-0 hidden lg:flex">
             <div class="p-4 border-b border-border">
-                <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Model Configuration</label>
+                <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Model Selection</label>
                 <select id="model-select" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
                     <option value="">Loading...</option>
                 </select>
@@ -85,20 +86,18 @@
                 </div>
             </div>
             <div class="p-4 border-t border-border bg-background/50">
-                <p class="text-[10px] text-gray-500 leading-tight">Architecture visualization mode. Some components may vary based on model class.</p>
+                <p class="text-[10px] text-gray-500 leading-tight font-mono uppercase tracking-tighter">Research Environment v1.2</p>
             </div>
         </aside>
 
         <!-- Main Workspace -->
         <div class="flex-1 flex flex-col overflow-hidden relative">
-            <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-thought/5 pointer-events-none"></div>
-            
             <!-- Prompt Input -->
             <div class="p-4 border-b border-border bg-surface/10 backdrop-blur-sm shrink-0">
                 <div class="max-w-4xl mx-auto flex gap-3">
                     <div class="flex-1 relative">
                         <textarea id="prompt-input" rows="2" placeholder="Enter prompt to visualize..." 
-                            class="w-full bg-surface/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none font-light custom-scrollbar">Harry looked at the mirror and saw</textarea>
+                            class="w-full bg-surface/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none font-light custom-scrollbar">Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing </textarea>
                     </div>
                     <button id="visualize-btn" class="px-8 py-2 bg-primary hover:bg-primary/80 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50 shrink-0">
                         Analyze
@@ -124,8 +123,8 @@
                         <div class="w-20 h-20 mx-auto mb-6 bg-surface border border-border rounded-2xl flex items-center justify-center">
                             <svg class="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
                         </div>
-                        <h2 class="text-lg font-bold text-gray-300 mb-2">Architectural Lens</h2>
-                        <p class="text-sm text-gray-500">Analyzes the internal state of Neon models in real-time.</p>
+                        <h2 class="text-lg font-bold text-gray-300 mb-2">Architectural Visualizer</h2>
+                        <p class="text-sm text-gray-500">Click Analyze to view real-time model telemetry.</p>
                     </div>
                 </div>
             </div>
@@ -149,23 +148,30 @@
         // Initialize
         async function init() {
             try {
+                console.log("Fetching models...");
                 const res = await fetch('/api/neonconnect/models');
+                if (!res.ok) throw new Error("Failed to fetch models");
                 models = await res.json();
+                console.log("Models loaded:", models);
+                
                 modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
                 if (models.length > 0) {
                     selectModel(models[0].id);
                 }
             } catch (e) {
-                console.error("Failed to load models:", e);
+                console.error("Initialization error:", e);
+                if (vizContainer) vizContainer.innerHTML = `<div class="p-4 text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl">Startup Error: ${e.message}</div>`;
             }
         }
 
         function selectModel(id) {
             currentModel = models.find(m => m.id === id);
+            if (!currentModel) return;
+
             modelInfo.innerHTML = `
                 <div class="space-y-4">
                     <div>
-                        <h3 class="text-sm font-bold text-white uppercase tracking-wider">${currentModel.model_name}</h3>
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider">${currentModel.model_name}</h3>
                         <p class="text-[10px] text-gray-500 font-mono mt-1">${currentModel.id}</p>
                     </div>
                     <div class="bg-black/20 rounded-xl border border-border overflow-hidden">
@@ -179,22 +185,22 @@
                                 <span class="text-gray-300">4</span>
                             </div>
                             <div class="flex justify-between text-[10px]">
-                                <span class="text-gray-500 font-mono uppercase">d_model</span>
+                                <span class="text-gray-500 font-mono uppercase">Dim</span>
                                 <span class="text-gray-300">272</span>
-                            </div>
-                            <div class="flex justify-between text-[10px]">
-                                <span class="text-gray-500 font-mono uppercase">d_ff</span>
-                                <span class="text-gray-300">1072</span>
                             </div>
                         </div>
                     </div>
-                    <div class="p-3 bg-primary/10 rounded-xl border border-primary/20">
-                        <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Live SOTA</p>
-                        <p class="text-[11px] text-gray-400 leading-tight">Currently running Neon167 weights trained on Wiki103.</p>
-                    </div>
                 </div>
             `;
-            if (document.querySelector('.tab-btn.active').dataset.tab === 'architecture') renderArchitecture();
+
+            if (currentModel.data_name.includes('wiki')) {
+                promptInput.value = "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing ";
+            } else {
+                promptInput.value = "Harry looked at the mirror and saw";
+            }
+
+            const activeTab = document.querySelector('.tab-btn.active');
+            if (activeTab && activeTab.dataset.tab === 'architecture') renderArchitecture();
         }
 
         modelSelect.addEventListener('change', (e) => selectModel(e.target.value));
@@ -208,157 +214,185 @@
         });
 
         async function visualize() {
-            if (!currentModel) return;
+            console.log("Analyze button clicked");
+            if (!currentModel) {
+                alert("Please select a model first.");
+                return;
+            }
+            
             visualizeBtn.disabled = true;
-            visualizeBtn.textContent = "Processing...";
-            vizContainer.innerHTML = `<div class="flex items-center justify-center py-20"><div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>`;
+            visualizeBtn.textContent = "Analysing...";
+            vizContainer.innerHTML = `<div class="flex items-center justify-center py-32"><div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>`;
 
             try {
+                const payload = { model_id: currentModel.id, prompt: promptInput.value };
+                console.log("Sending visualization request:", payload);
+                
                 const res = await fetch('/api/neonconnect/visualize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model_id: currentModel.id, prompt: promptInput.value })
+                    body: JSON.stringify(payload)
                 });
+                
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    throw new Error(errBody.error || `Server error: ${res.status}`);
+                }
+                
                 lastVisData = await res.json();
-                renderTab(document.querySelector('.tab-btn.active').dataset.tab);
+                console.log("Visualization data received:", lastVisData);
+                
+                const activeTab = document.querySelector('.tab-btn.active');
+                if (activeTab) renderTab(activeTab.dataset.tab);
             } catch (e) {
-                vizContainer.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm">Error: ${e.message}</div>`;
+                console.error("Visualization failed:", e);
+                vizContainer.innerHTML = `<div class="p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl shadow-xl shadow-red-500/5">
+                    <h3 class="font-bold mb-2 uppercase tracking-widest text-xs">Analysis Error</h3>
+                    <p class="text-sm opacity-80">${e.message}</p>
+                </div>`;
             } finally {
                 visualizeBtn.disabled = false;
                 visualizeBtn.textContent = "Analyze";
             }
         }
 
+        visualizeBtn.onclick = visualize;
+
         function renderTab(tabId) {
+            if (!vizContainer) return;
             vizContainer.innerHTML = '';
+            
             if (tabId === 'architecture') { renderArchitecture(); return; }
+            
             if (!lastVisData) {
-                vizContainer.innerHTML = `<div class="text-center py-20 text-gray-500"><p class="text-sm font-medium">Click "Analyze" to capture model telemetry.</p></div>`;
+                vizContainer.innerHTML = `<div class="text-center py-20 text-gray-500"><p class="text-sm font-medium">Capture model response to enable this view.</p></div>`;
                 return;
             }
-            if (tabId === 'single-head') renderSingleHead();
-            else if (tabId === 'all-heads') renderAllHeads();
-            else if (tabId === 'mlp-acts') renderMLP();
-            else if (tabId === 'next-token') renderNextToken();
-            else if (tabId === 'inference') renderInference();
+            
+            try {
+                if (tabId === 'single-head') renderSingleHead();
+                else if (tabId === 'all-heads') renderAllHeads();
+                else if (tabId === 'mlp-acts') renderMLP();
+                else if (tabId === 'next-token') renderNextToken();
+                else if (tabId === 'inference') renderInference();
+            } catch (e) {
+                console.error(`Tab render error (${tabId}):`, e);
+                vizContainer.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs font-mono">Render Error: ${e.message}</div>`;
+            }
         }
 
-        function cleanToken(t) { return t.replace('Ġ', '·').replace('Ċ', '↵').replace('▁', '·'); }
-        function getTokenLabels(tokens) { return tokens.map((t, i) => `${i}:${cleanToken(t)}`); }
+        function cleanToken(t) { return (t || "").replace('Ġ', '·').replace('Ċ', '↵').replace('▁', '·'); }
+        function getTokenLabels(tokens) { return (tokens || []).map((t, i) => `${i}:${cleanToken(t)}`); }
 
         function renderArchitecture() {
             const mermaidCode = `
-graph TD
-    A["Input Sequence"] --> B["Token Embedding"]
-    B --> C["Residual Stream"]
+graph LR
+    A["Sequence"] --> B["Embedding"]
+    B --> C["Residual"]
     
-    subgraph Block ["Transformer Block (x4)"]
-        direction TB
+    subgraph Block ["Block (x4)"]
+        direction LR
         C --> LN1["RMSNorm"]
         
         subgraph Attn ["Conv-Attention"]
-            direction TB
-            LN1 --> PROJ["C_Attn Linear (4*d_model)"]
-            PROJ --> S1["Q Split"]
-            PROJ --> S2["K Split"]
-            PROJ --> S3["V Split"]
-            PROJ --> S4["I Split"]
+            direction LR
+            LN1 --> PROJ["Proj"]
+            PROJ --> S1["Q"]
+            PROJ --> S2["K"]
+            PROJ --> S3["V"]
+            PROJ --> S4["I"]
             
-            S1 --> CQ["K3 DepthConv"]
-            S2 --> CK["K3 DepthConv"]
-            S3 --> CV["K3 DepthConv"]
-            S4 --> CI["K3 DepthConv"]
+            S1 --> CQ["K3 DW"]
+            S2 --> CK["K3 DW"]
+            S3 --> CV["K3 DW"]
+            S4 --> CI["K3 DW"]
             
-            CQ --> ROPE1["Head Split + ROPE"]
-            CK --> ROPE2["Head Split + ROPE"]
-            CV --> HSP1["Head Split"]
-            CI --> HSP2["Head Split"]
+            CQ --> ROPE1["ROPE"]
+            CK --> ROPE2["ROPE"]
             
-            ROPE1 --> DOT["Softmax(Q @ Kᵀ)"]
+            ROPE1 --> DOT["Softmax(QKᵀ)"]
             ROPE2 --> DOT
             DOT --> WV["Attn @ V"]
-            HSP1 --> WV
+            CV --> WV
             
-            WV --> GATE["Intent Gating (⊙ σ(I))"]
-            HSP2 --> GATE
+            WV --> GATE["⊙ σ(I)"]
+            CI --> GATE
             
-            GATE --> CPR["C_Proj Linear"]
+            GATE --> CPR["Output"]
         end
         
-        CPR --> R1["(+) Residual Add"]
+        CPR --> R1["(+)"]
         C --> R1
         
         R1 --> LN2["RMSNorm"]
         
         subgraph Hydra ["Hydra MLP"]
-            direction TB
-            LN2 --> HW1["Content W1"]
-            LN2 --> HC9["K9 DepthConv"]
-            HC9 --> HG["Gate Projection"]
-            HG --> HM["Hadamard (⊙ σ)"]
+            direction LR
+            LN2 --> HW1["W1"]
+            LN2 --> HC9["K9 DW"]
+            HC9 --> HG["Gate"]
+            HG --> HM["⊙ σ"]
             HW1 --> HM
-            HM --> HW2["W2 Factorization"]
+            HM --> HW2["W2"]
         end
         
-        HW2 --> R2["(+) Residual Add"]
+        HW2 --> R2["(+)"]
         R1 --> R2
     end
     
-    R2 --> F["Final RMSNorm"]
-    F --> H["LM Head"]
-    H --> P["Next Token Probs"]
+    R2 --> F["Norm"]
+    F --> H["Head"]
+    H --> P["Probs"]
             `;
-            vizContainer.innerHTML = `<div class="flex justify-center p-4"><div class="mermaid">${mermaidCode}</div></div>`;
-            import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs').then(m => { m.default.contentLoaded(); });
+            vizContainer.innerHTML = `<div class="mermaid-wrapper"><div class="mermaid">${mermaidCode}</div></div>`;
+            if (window.mermaid) {
+                window.mermaid.contentLoaded();
+            }
         }
 
         function renderSingleHead() {
             const config = lastVisData.config;
             vizContainer.innerHTML = `
                 <div class="space-y-8 pb-12">
-                    <div class="flex gap-4 items-end bg-surface/40 p-4 rounded-2xl border border-border">
-                        <div class="flex-1">
-                            <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1.5">Depth Layer</label>
-                            <select id="layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm">
-                                ${Array.from({length: config.n_layers}, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
+                    <div class="flex flex-wrap gap-4 items-end bg-surface/40 p-4 rounded-2xl border border-border">
+                        <div class="flex-1 min-w-[140px]">
+                            <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1.5">Layer</label>
+                            <select id="layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm appearance-none outline-none hover:bg-surface2 transition-colors">
+                                ${Array.from({length: config.n_layers}, (_, i) => `<option value="${i}">Depth Layer ${i}</option>`).join('')}
                             </select>
                         </div>
-                        <div class="flex-1">
-                            <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1.5">Attention Head</label>
-                            <select id="head-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm">
-                                ${Array.from({length: config.n_head}, (_, i) => `<option value="${i}">Head ${i}</option>`).join('')}
+                        <div class="flex-1 min-w-[140px]">
+                            <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1.5">Head</label>
+                            <select id="head-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm appearance-none outline-none hover:bg-surface2 transition-colors">
+                                ${Array.from({length: config.n_head}, (_, i) => `<option value="${i}">Attention Head ${i}</option>`).join('')}
                             </select>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-1 h-4 bg-primary rounded-full"></div>
-                                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-300">Attention Map</h4>
+                            <div class="flex items-center gap-2 mb-2 text-primary uppercase font-bold text-[10px] tracking-widest">
+                                <span class="w-2 h-2 rounded-full bg-primary"></span> Attention Core
                             </div>
                             <div id="attn-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden"></div>
                             
-                            <div class="flex items-center gap-2 pt-4 mb-2">
-                                <div class="w-1 h-4 bg-thought rounded-full"></div>
-                                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-300">Intent Gating Signal (I)</h4>
+                            <div class="flex items-center gap-2 pt-4 mb-2 text-thought uppercase font-bold text-[10px] tracking-widest">
+                                <span class="w-2 h-2 rounded-full bg-thought"></span> Gating (Intent)
                             </div>
                             <div id="intent-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden"></div>
                         </div>
                         
                         <div class="space-y-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-1 h-4 bg-search rounded-full"></div>
-                                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-300">Search Vectors (Q & K)</h4>
+                            <div class="flex items-center gap-2 mb-2 text-search uppercase font-bold text-[10px] tracking-widest">
+                                <span class="w-2 h-2 rounded-full bg-search"></span> Q & K Projections
                             </div>
                             <div id="q-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden" style="height: 300px;"></div>
                             <div id="k-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden" style="height: 300px;"></div>
                         </div>
 
                         <div class="xl:col-span-2 space-y-4 pt-8">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-1 h-4 bg-code rounded-full"></div>
-                                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-300">Depthwise Convolution Telemetry (K=3 Blur)</h4>
+                            <div class="flex items-center gap-2 mb-4 text-code uppercase font-bold text-[10px] tracking-widest">
+                                <span class="w-2 h-2 rounded-full bg-code"></span> Convolution Feature Maps (DW K=3)
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div id="conv-q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
@@ -376,8 +410,8 @@ graph TD
                 const h = parseInt(document.getElementById('head-sel').value);
                 plotSingleHeadDetailed(l, h);
             };
-            document.getElementById('layer-sel').addEventListener('change', update);
-            document.getElementById('head-sel').addEventListener('change', update);
+            document.getElementById('layer-sel').onchange = update;
+            document.getElementById('head-sel').onchange = update;
             update();
         }
 
@@ -391,33 +425,29 @@ graph TD
                 font: { color: '#71717a', size: 9, family: 'JetBrains Mono' },
                 xaxis: { showticklabels: false, gridcolor: '#27272a' },
                 yaxis: { autorange: 'reversed', showticklabels: false, gridcolor: '#27272a' },
-                margin: { l: 10, r: 10, b: 10, t: 30 },
-                hovermode: 'closest'
+                margin: { l: 10, r: 10, b: 10, t: 30 }
             };
 
             const plotHeat = (divId, zData, title, colorscale='RdBu') => {
+                if (!zData) return;
                 Plotly.newPlot(divId, [{
                     z: zData, x: Array.from({length: zData[0].length}, (_, i) => `d${i}`), y: tokens,
                     type: 'heatmap', colorscale: colorscale, zmid: 0, showscale: false
-                }], { ...baseLayout, title: { text: title, font: { size: 10, weight: 'bold' } } }, {displayModeBar: false});
+                }], { ...baseLayout, title: { text: title, font: { size: 9, weight: 'bold' } } }, {displayModeBar: false});
             };
 
-            // Attention Weights
             Plotly.newPlot('attn-plot', [{
                 z: lastVisData.attn[layer][0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false
-            }], { ...baseLayout, title: { text: 'ATTENTION DYNAMICS', font: { size: 10 } } }, {displayModeBar: false});
+            }], { ...baseLayout, title: { text: 'ATTENTION DYNAMICS', font: { size: 9 } } }, {displayModeBar: false});
 
-            // Gating Signal
-            plotHeat('intent-plot', lastVisData.intent[layer][0][head], 'INTENT GATING PATTERN', 'Viridis');
+            if (lastVisData.attn_intents) plotHeat('intent-plot', lastVisData.attn_intents[layer][0][head], 'GATING SIGNAL', 'Viridis');
+            plotHeat('q-plot', lastVisData.q[layer][0][head], 'QUERY (Q)');
+            plotHeat('k-plot', lastVisData.k[layer][0][head], 'KEY (K)');
 
-            // Q & K
-            plotHeat('q-plot', lastVisData.q[layer][0][head], 'QUERY VECTOR (Q)');
-            plotHeat('k-plot', lastVisData.k[layer][0][head], 'KEY VECTOR (K)');
-
-            // Conv feature maps
             const baseConv = layer * 5;
             const getHeadConv = (idx) => {
-                const data = lastVisData.conv[idx].data; // [C, T]
+                if (!lastVisData.conv || !lastVisData.conv[idx]) return null;
+                const data = lastVisData.conv[idx].data;
                 const headData = [];
                 for(let t=0; t<data[0].length; t++) {
                     const row = [];
@@ -427,12 +457,10 @@ graph TD
                 return headData;
             };
 
-            if (lastVisData.conv && lastVisData.conv.length > baseConv + 3) {
-                plotHeat('conv-q-plot', getHeadConv(baseConv + 0), 'CONV Q', 'RdBu');
-                plotHeat('conv-k-plot', getHeadConv(baseConv + 1), 'CONV K', 'RdBu');
-                plotHeat('conv-v-plot', getHeadConv(baseConv + 2), 'CONV V', 'RdBu');
-                plotHeat('conv-i-plot', getHeadConv(baseConv + 3), 'CONV I', 'Viridis');
-            }
+            const qC = getHeadConv(baseConv + 0); if (qC) plotHeat('conv-q-plot', qC, 'CONV Q', 'RdBu');
+            const kC = getHeadConv(baseConv + 1); if (kC) plotHeat('conv-k-plot', kC, 'CONV K', 'RdBu');
+            const vC = getHeadConv(baseConv + 2); if (vC) plotHeat('conv-v-plot', vC, 'CONV V', 'RdBu');
+            const iC = getHeadConv(baseConv + 3); if (iC) plotHeat('conv-i-plot', iC, 'CONV I', 'Viridis');
         }
 
         function renderAllHeads() {
@@ -440,15 +468,15 @@ graph TD
             const n_heads = lastVisData.config.n_head;
             
             vizContainer.innerHTML = `
-                <div class="flex flex-col gap-6 py-4">
-                    <div class="flex">
+                <div class="flex flex-col gap-6 py-4 overflow-x-auto">
+                    <div class="flex min-w-[600px]">
                         <div class="w-20 shrink-0"></div>
                         <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${n_heads}, 1fr);">
                             ${Array.from({length: n_heads}, (_, i) => `<div class="text-center text-[10px] font-bold uppercase tracking-widest text-gray-500">Head ${i}</div>`).join('')}
                         </div>
                     </div>
                     ${Array.from({length: n_layers}, (_, l) => `
-                        <div class="flex items-stretch">
+                        <div class="flex items-stretch min-w-[600px]">
                             <div class="w-20 shrink-0 flex items-center justify-end text-[10px] font-bold uppercase tracking-widest text-gray-500 border-r border-border pr-4 mr-4">Layer ${l}</div>
                             <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${n_heads}, 1fr);">
                                 ${Array.from({length: n_heads}, (_, h) => `
@@ -481,24 +509,22 @@ graph TD
             vizContainer.innerHTML = `
                 <div class="space-y-8 pb-12">
                     <div class="bg-surface/40 p-4 rounded-2xl border border-border">
-                        <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1.5">Transformer Block</label>
+                        <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1.5">Block</label>
                         <select id="mlp-layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm max-w-xs focus:ring-1 focus:ring-primary outline-none transition-all">
-                            ${Array.from({length: n_layers}, (_, i) => `<option value="${i}">Block ${i}</option>`).join('')}
+                            ${Array.from({length: n_layers}, (_, i) => `<option value="${i}">Transformer Block ${i}</option>`).join('')}
                         </select>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-1 h-4 bg-primary rounded-full"></div>
-                                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-300">Fact Retrieval (Hidden State)</h4>
+                            <div class="flex items-center gap-2 mb-2 text-primary font-bold text-[10px] tracking-widest uppercase">
+                                <span class="w-2 h-2 rounded-full bg-primary"></span> FFN Hidden States
                             </div>
                             <div id="mlp-act-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden" style="height: 600px;"></div>
                         </div>
                         <div class="space-y-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-1 h-4 bg-search rounded-full"></div>
-                                <h4 class="text-xs font-bold uppercase tracking-widest text-gray-300">Hydra Gate Pattern (Conv k=9)</h4>
+                            <div class="flex items-center gap-2 mb-2 text-search font-bold text-[10px] tracking-widest uppercase">
+                                <span class="w-2 h-2 rounded-full bg-search"></span> Hydra Gate (K=9)
                             </div>
                             <div id="mlp-gate-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden" style="height: 600px;"></div>
                         </div>
@@ -506,7 +532,7 @@ graph TD
                 </div>
             `;
             const update = () => plotMLPAct(parseInt(document.getElementById('mlp-layer-sel').value));
-            document.getElementById('mlp-layer-sel').addEventListener('change', update);
+            document.getElementById('mlp-layer-sel').onchange = update;
             update();
         }
 
@@ -528,26 +554,17 @@ graph TD
                 type: 'heatmap', colorscale: 'RdBu', zmid: 0, showscale: false
             }], layout);
 
-            const convIndex = layer * 5 + 4;
-            if (lastVisData.conv && lastVisData.conv[convIndex]) {
-                const gateData = lastVisData.conv[convIndex].data;
-                const T = gateData[0].length;
-                const D = gateData.length;
-                const zFinal = [];
-                for(let t=0; t<T; t++) {
-                    const row = [];
-                    for(let d=0; d<D; d++) row.push(gateData[d][t]);
-                    zFinal.push(row);
-                }
+            if (lastVisData.mlp_gates && lastVisData.mlp_gates[layer]) {
+                const gateData = lastVisData.mlp_gates[layer][0];
                 Plotly.newPlot('mlp-gate-plot', [{
-                    z: zFinal, x: Array.from({length: D}, (_, i) => `d${i}`), y: tokens,
+                    z: gateData, x: Array.from({length: gateData[0].length}, (_, i) => `d${i}`), y: tokens,
                     type: 'heatmap', colorscale: 'Viridis', showscale: false
                 }], { ...layout, yaxis: { ...layout.yaxis, autorange: 'reversed' } });
             }
         }
 
         function renderNextToken() {
-            vizContainer.innerHTML = `<div class="bg-surface/20 rounded-2xl border border-border p-4"><div id="probs-plot" class="plot-container" style="height: 600px;"></div></div>`;
+            vizContainer.innerHTML = `<div class="bg-surface/20 rounded-2xl border border-border p-4 shadow-xl"><div id="probs-plot" class="plot-container" style="height: 600px;"></div></div>`;
             const logits = lastVisData.logits;
             const maxLogit = Math.max(...logits);
             const exps = logits.map(l => Math.exp(l - maxLogit));
@@ -557,14 +574,14 @@ graph TD
             indexed.sort((a, b) => b.p - a.p);
             const top20 = indexed.slice(0, 20);
             Plotly.newPlot('probs-plot', [{
-                x: top20.map(x => x.p), y: top20.map(x => `TOKEN ID:${x.i}`),
+                x: top20.map(x => x.p), y: top20.map(x => `ID:${x.i}`),
                 type: 'bar', orientation: 'h', marker: { color: '#6366f1' }
             }], {
-                title: { text: 'NEXT TOKEN PROBABILITY DISTRIBUTION', font: { size: 12, color: '#a1a1aa', weight: 'bold' } },
+                title: { text: 'NEXT TOKEN PROBABILITIES', font: { size: 11, color: '#a1a1aa', weight: 'bold' } },
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { color: '#71717a', size: 10, family: 'JetBrains Mono' },
                 xaxis: { gridcolor: '#27272a', title: 'Probability' }, yaxis: { autorange: 'reversed' },
-                margin: { l: 120, r: 50, b: 50, t: 80 }
+                margin: { l: 100, r: 50, b: 50, t: 80 }
             });
         }
 
@@ -573,11 +590,11 @@ graph TD
                 <div class="max-w-2xl mx-auto space-y-6 py-10">
                     <div class="bg-surface p-8 rounded-3xl border border-border shadow-2xl relative overflow-hidden">
                         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-thought to-search"></div>
-                        <h3 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <h3 class="text-lg font-bold mb-6 flex items-center gap-3">
                             <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                            Live Inference Console
+                            Inference Console
                         </h3>
-                        <div id="chat-output" class="min-h-[250px] bg-background/50 rounded-2xl p-6 mb-6 font-light leading-relaxed whitespace-pre-wrap text-gray-300 border border-border/50 text-base shadow-inner overflow-y-auto custom-scrollbar max-h-96">Waiting for input...</div>
+                        <div id="chat-output" class="min-h-[250px] bg-background/50 rounded-2xl p-6 mb-6 font-light leading-relaxed whitespace-pre-wrap text-gray-300 border border-border/50 text-sm shadow-inner overflow-y-auto custom-scrollbar max-h-96">Ready...</div>
                         <div class="flex gap-3">
                             <input id="chat-input" type="text" class="flex-1 bg-background border border-border rounded-xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Enter prompt...">
                             <button id="chat-send" class="px-6 py-3 bg-primary hover:bg-primary/80 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20">Generate</button>
@@ -588,18 +605,18 @@ graph TD
             const out = document.getElementById('chat-output');
             const inp = document.getElementById('chat-input');
             const send = document.getElementById('chat-send');
-            send.addEventListener('click', async () => {
+            send.onclick = async () => {
                 const p = inp.value; if (!p) return;
-                send.disabled = true; out.textContent = "Synthesizing response...";
+                send.disabled = true; out.textContent = "Thinking...";
                 try {
                     const res = await fetch('/api/neonconnect/generate', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ model_id: currentModel.id, prompt: p, max_tokens: 150 })
                     });
                     const data = await res.json(); out.textContent = data.result;
-                } catch (e) { out.textContent = "Transmission Error: " + e.message; }
+                } catch (e) { out.textContent = "Error: " + e.message; }
                 finally { send.disabled = false; }
-            });
+            };
         }
 
         init();
