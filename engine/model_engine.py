@@ -126,7 +126,23 @@ class NeonModelEngine:
     def capture_visualization(self, model_id, prompt):
         # Global lock to prevent concurrent hook patching
         with self._vis_lock:
-            return self._capture_visualization_unsafe(model_id, prompt)
+            data = self._capture_visualization_unsafe(model_id, prompt)
+            
+            # Final safety pass: Recursively sanitize any remaining non-finite floats
+            # This is duplicate work but ensures robust JSON compliance
+            def sanitize(obj):
+                if isinstance(obj, float):
+                    if np.isnan(obj): return 0.0
+                    if np.isposinf(obj): return 1e5
+                    if np.isneginf(obj): return -1e5
+                    return obj
+                if isinstance(obj, list):
+                    return [sanitize(x) for x in obj]
+                if isinstance(obj, dict):
+                    return {k: sanitize(v) for k, v in obj.items()}
+                return obj
+            
+            return sanitize(data)
 
     def _capture_visualization_unsafe(self, model_id, prompt):
         model, tokenizer, config = self.load_model(model_id)
