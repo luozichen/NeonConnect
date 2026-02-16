@@ -8,26 +8,23 @@ import importlib
 import numpy as np
 from tokenizers import Tokenizer
 
-# Add NeonBench to path to import models
-NEONBENCH_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "NeonBench"))
-if NEONBENCH_ROOT not in sys.path:
-    sys.path.insert(0, NEONBENCH_ROOT)
-
-from train import get_config
+# Use local config
+from .config import get_config
 
 class NeonModelEngine:
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.models_cache = {}
         self.tokenizers_cache = {}
+        # Local paths relative to NeonConnect root
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         self.ckpt_dirs = [
-            os.path.join(NEONBENCH_ROOT, "checkpoints"),
-            os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "models"))
+            os.path.join(base_dir, "models")
         ]
-        self.tok_dir = os.path.join(NEONBENCH_ROOT, "tokenizers")
+        self.tok_dir = os.path.join(base_dir, "tokenizers")
 
     def get_available_models(self):
-        """Scans the checkpoints directories for available models."""
+        """Scans the local models directory for available models."""
         ckpts = []
         seen_ids = set()
         for ckpt_dir in self.ckpt_dirs:
@@ -55,13 +52,20 @@ class NeonModelEngine:
         return ckpts
 
     def find_tokenizer(self, tok_name, data_name):
+        # 1. Try exact dataset + tok match (e.g. wiki103_tok4.json)
         p = os.path.join(self.tok_dir, f"{data_name}_{tok_name}.json")
         if os.path.exists(p): return p
+        
+        # 2. Try alias hp0 -> hp
         data_alias = data_name.replace("hp0", "hp")
         p = os.path.join(self.tok_dir, f"{data_alias}_{tok_name}.json")
         if os.path.exists(p): return p
+        
+        # 3. Try just the data name
         p = os.path.join(self.tok_dir, f"{data_name}.json")
         if os.path.exists(p): return p
+
+        # 4. Fallback search
         if os.path.isdir(self.tok_dir):
             for f in os.listdir(self.tok_dir):
                 if f.endswith(f"_{tok_name}.json") and (data_name in f or data_alias in f):
@@ -80,7 +84,7 @@ class NeonModelEngine:
                 break
         
         if not ckpt_path:
-            raise FileNotFoundError(f"Checkpoint {model_id} not found in any directory.")
+            raise FileNotFoundError(f"Checkpoint {model_id} not found locally.")
 
         stem = model_id.replace("_best.pth", "")
         parts = stem.split("_")
@@ -92,22 +96,22 @@ class NeonModelEngine:
         if not tok_path:
             raise FileNotFoundError(f"Tokenizer not found for {model_id}")
 
-        with open(tok_path, 'r', encoding='utf-8') as f:
-            tok_data = json.load(f)
-        
-        if tok_data.get('type') == 'word_level_pos':
-            from scripts.build_warm_tokenizer import WarmTokenizer
-            tokenizer = WarmTokenizer(tok_path)
-            vocab_size = len(tokenizer)
-        else:
-            tokenizer = Tokenizer.from_file(tok_path)
-            vocab_size = tokenizer.get_vocab_size()
+        tokenizer = Tokenizer.from_file(tok_path)
+        vocab_size = tokenizer.get_vocab_size()
 
         config = get_config(model_name)
         config['vocab_size'] = vocab_size
 
         cls_name = model_name.capitalize()
-        mod = importlib.import_module(f"models.{model_name}")
+        # Import from local networks subpackage
+        # We use relative import logic
+        mod_name = f"NeonConnect.networks.{model_name}"
+        if mod_name not in sys.modules:
+            # Absolute import from the perspective of the flask app root
+            mod = importlib.import_module(mod_name)
+        else:
+            mod = sys.modules[mod_name]
+            
         ModelClass = getattr(mod, cls_name)
         model = ModelClass(config)
         
@@ -122,12 +126,8 @@ class NeonModelEngine:
     @torch.no_grad()
     def generate(self, model_id, prompt, max_new_tokens=100, temperature=1.0, top_k=50):
         model, tokenizer, config = self.load_model(model_id)
-        if hasattr(tokenizer, 'encode'):
-            res = tokenizer.encode(prompt)
-            ids = res.ids if hasattr(res, 'ids') else res
-            if not isinstance(ids, list): ids = ids.tolist() if torch.is_tensor(ids) else [ids]
-        else:
-            ids = tokenizer.encode(prompt)
+        encoded = tokenizer.encode(prompt)
+        ids = encoded.ids
             
         idx = torch.tensor([ids], dtype=torch.long, device=self.device)
         block_size = config['block_size']
@@ -148,13 +148,9 @@ class NeonModelEngine:
 
     def capture_visualization(self, model_id, prompt):
         model, tokenizer, config = self.load_model(model_id)
-        res = tokenizer.encode(prompt)
-        if hasattr(res, 'ids'):
-            ids = res.ids
-            tokens = res.tokens
-        else:
-            ids = res
-            tokens = [tokenizer.decode([i]) for i in ids]
+        encoded = tokenizer.encode(prompt)
+        ids = encoded.ids
+        tokens = encoded.tokens
         
         if len(ids) > config['block_size']:
             ids = ids[:config['block_size']]
