@@ -43,6 +43,12 @@
         }
     </script>
     <style>
+        :root {
+            --theme-system-online: #00FF00;
+            --theme-thought: #FF00FF;
+            --theme-search: #00FFFF;
+            --theme-code-execution: #FF0000;
+        }
         body { background-color: #0a0a0b; color: #fafafa; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -52,9 +58,38 @@
         .mermaid-wrapper { width: 100%; overflow-x: auto; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 1rem; min-height: 400px; display: flex; align-items: center; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         input[type="range"] { accent-color: #6366f1; }
+        
+        /* Legacy Switch Button */
+        #legacy-switch-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(26, 26, 29, 0.8);
+            border: 1px solid #2a2a2f;
+            padding: 8px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #71717a;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        #legacy-switch-btn:hover {
+            color: #fff;
+            border-color: #6366f1;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden font-sans text-sm md:text-base">
+    <!-- Legacy Switch Button -->
+    <a href="/neoncore" id="legacy-switch-btn">Switch to Legacy Chat</a>
+
     <!-- Header -->
     <header class="h-16 border-b border-border flex items-center justify-between px-6 bg-surface/50 backdrop-blur-md z-20 shrink-0">
         <div class="flex items-center gap-3">
@@ -64,8 +99,6 @@
             </h1>
         </div>
         <div class="flex items-center gap-4">
-            <a href="/neoncore" class="text-xs font-medium text-gray-400 hover:text-white transition-colors bg-surface border border-border px-3 py-1.5 rounded-lg">Switch to NeonCore</a>
-            <div class="h-4 w-[1px] bg-border"></div>
             <span class="text-xs font-mono text-gray-500">{{ username }}</span>
             <a href="/logout" class="text-xs font-bold text-red-500/80 hover:text-red-400 uppercase tracking-wider">Logout</a>
         </div>
@@ -76,7 +109,7 @@
         <aside class="w-72 border-r border-border flex flex-col bg-surface/30 shrink-0 hidden lg:flex">
             <div class="p-4 border-b border-border">
                 <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Active Network</label>
-                <select id="model-select" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
+                <select id="model-select" class="w-full bg-table-row border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
                     <option value="">Loading...</option>
                 </select>
             </div>
@@ -95,7 +128,7 @@
                 <div class="max-w-4xl mx-auto flex gap-3">
                     <div class="flex-1 relative">
                         <textarea id="prompt-input" rows="2" placeholder="Enter prompt to visualize..." 
-                            class="w-full bg-surface/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none font-light custom-scrollbar">Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing </textarea>
+                            class="w-full bg-surface/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none font-light custom-scrollbar">Harry looked at the mirror and saw</textarea>
                     </div>
                     <button id="visualize-btn" class="px-8 py-2 bg-primary hover:bg-primary/80 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50 shrink-0">
                         Analyze

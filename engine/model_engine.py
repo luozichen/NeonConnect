@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,6 +15,7 @@ from .config import get_config
 class NeonModelEngine:
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._vis_lock = threading.RLock()
         self.models_cache = {}
         self.tokenizers_cache = {}
         # Local paths relative to NeonConnect root
@@ -122,6 +124,11 @@ class NeonModelEngine:
         return tokenizer.decode(generated)
 
     def capture_visualization(self, model_id, prompt):
+        # Global lock to prevent concurrent hook patching
+        with self._vis_lock:
+            return self._capture_visualization_unsafe(model_id, prompt)
+
+    def _capture_visualization_unsafe(self, model_id, prompt):
         model, tokenizer, config = self.load_model(model_id)
         encoded = tokenizer.encode(prompt)
         ids = encoded.ids
@@ -194,23 +201,29 @@ class NeonModelEngine:
         top_probs, top_indices = torch.topk(probs, 20)
         top_tokens = [tokenizer.decode([idx.item()]) for idx in top_indices]
 
-        def to_list(t):
-             if isinstance(t, torch.Tensor): return t.numpy().tolist()
-             if isinstance(t, list): return [to_list(i) for i in t]
-             if isinstance(t, dict): return {k: to_list(v) for k, v in t.items()}
+        def optimize_tensor_data(t):
+             """Recursively convert tensors to lists, rounding floats to 4 decimals to save space."""
+             if isinstance(t, torch.Tensor):
+                 # Convert to half precision first to save memory if dealing with large arrays? 
+                 # For JSON serialization, we just need standard python lists of floats.
+                 # Rounding is key.
+                 t = t.float().numpy() 
+                 return np.round(t, 4).tolist()
+             if isinstance(t, list): return [optimize_tensor_data(i) for i in t]
+             if isinstance(t, dict): return {k: optimize_tensor_data(v) for k, v in t.items()}
              return t
 
         return {
             "tokens": tokens,
-            "attn": to_list(data_registry["attn"]),
-            "q": to_list(data_registry["q"]),
-            "k": to_list(data_registry["k"]),
-            "v": to_list(data_registry["v"]),
-            "attn_intents": to_list(data_registry["attn_intents"]),
-            "attn_scores": to_list(data_registry["attn_scores"]),
-            "mlp_gates": to_list(data_registry["mlp_gates"]),
-            "mlp": to_list(data_registry["mlp"]),
-            "conv": to_list(data_registry["conv"]),
+            "attn": optimize_tensor_data(data_registry["attn"]),
+            "q": optimize_tensor_data(data_registry["q"]),
+            "k": optimize_tensor_data(data_registry["k"]),
+            "v": optimize_tensor_data(data_registry["v"]),
+            "attn_intents": optimize_tensor_data(data_registry["attn_intents"]),
+            "attn_scores": optimize_tensor_data(data_registry["attn_scores"]),
+            "mlp_gates": optimize_tensor_data(data_registry["mlp_gates"]),
+            "mlp": optimize_tensor_data(data_registry["mlp"]),
+            "conv": optimize_tensor_data(data_registry["conv"]),
             "top_k_probs": top_probs.tolist(),
             "top_k_tokens": top_tokens,
             "config": config
