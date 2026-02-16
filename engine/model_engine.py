@@ -126,23 +126,10 @@ class NeonModelEngine:
     def capture_visualization(self, model_id, prompt):
         # Global lock to prevent concurrent hook patching
         with self._vis_lock:
-            data = self._capture_visualization_unsafe(model_id, prompt)
-            
-            # Final safety pass: Recursively sanitize any remaining non-finite floats
-            # This is duplicate work but ensures robust JSON compliance
-            def sanitize(obj):
-                if isinstance(obj, float):
-                    if np.isnan(obj): return 0.0
-                    if np.isposinf(obj): return 1e5
-                    if np.isneginf(obj): return -1e5
-                    return obj
-                if isinstance(obj, list):
-                    return [sanitize(x) for x in obj]
-                if isinstance(obj, dict):
-                    return {k: sanitize(v) for k, v in obj.items()}
-                return obj
-            
-            return sanitize(data)
+            # We don't need the double-sanitization wrapper anymore if we trust optimize_tensor_data
+            # But the user said "remove some of your ultra-robust fixes".
+            # I will rely on the robust optimize_tensor_data inside _capture_visualization_unsafe
+            return self._capture_visualization_unsafe(model_id, prompt)
 
     def _capture_visualization_unsafe(self, model_id, prompt):
         model, tokenizer, config = self.load_model(model_id)
@@ -154,54 +141,135 @@ class NeonModelEngine:
             tokens = tokens[:config['block_size']]
         input_tensor = torch.tensor([ids], device=self.device)
         
+        # New registry structure
         data_registry = {
-            "attn": [], "q": [], "k": [], "v": [],
-            "attn_intents": [], "mlp_gates": [], "mlp": [], "conv": [],
-            "attn_scores": []
+            "layers": [{} for _ in range(config['n_layers'])], 
+            "top_k_probs": None,
+            "top_k_tokens": None
         }
 
+        # 1. Hook F.scaled_dot_product_attention for Attention Matrix (Post-Softmax)
         real_sdpa = F.scaled_dot_product_attention
+        sdpa_counter = [0] # Mutable counter
         def spy_sdpa(q, k, v, *args, **kwargs):
-            data_registry["q"].append(q.detach().cpu())
-            data_registry["k"].append(k.detach().cpu())
-            data_registry["v"].append(v.detach().cpu())
+            # Capture attention weights
             L, S = q.size(-2), k.size(-2)
             scale = kwargs.get('scale', None)
             s = 1.0 / (q.size(-1) ** 0.5) if scale is None else scale
             logits = q @ k.transpose(-2, -1) * s
+            
+            # Causal mask
             mask = torch.triu(torch.ones(L, S, dtype=torch.bool, device=q.device), diagonal=1)
             logits.masked_fill_(mask, float("-inf"))
-            data_registry["attn_scores"].append(logits.detach().cpu())
+            
             w = torch.softmax(logits, dim=-1)
-            data_registry["attn"].append(w.detach().cpu())
+            
+            layer_idx = sdpa_counter[0]
+            if layer_idx < len(data_registry["layers"]):
+                data_registry["layers"][layer_idx]["attn"] = w.detach().cpu()
+                sdpa_counter[0] += 1
+                
             return w @ v
 
+        # 2. Module Hooks for Q, K, V, I (Raw and Conv)
+        hooks = []
+        
+        def get_raw_hook(layer_idx, n_head, head_dim):
+            def hook(module, inp, out):
+                # out is [B, T, 4*D]
+                B, T, _ = out.shape
+                # Split
+                splits = out.split(n_head * head_dim, dim=2)
+                if len(splits) == 4:
+                    q, k, v, i = splits
+                    # Reshape to [B, H, T, D_head] for visualization consistency
+                    # Note: neon167 implementation transposes to [B, T, H, D] first then [B, H, T, D] usually
+                    # But here out is [B, T, D]. We want [B, H, T, D_head]? 
+                    # Actually standard generic viz usually expects [B, H, T, D] or [H, T, D]
+                    # Let's store as [H, T, D] (squeezing B=1 later)
+                    
+                    # shape: [B, T, n_head * head_dim] -> [B, T, n_head, head_dim] -> [B, n_head, T, head_dim]
+                    q = q.view(B, T, n_head, head_dim).transpose(1, 2)
+                    k = k.view(B, T, n_head, head_dim).transpose(1, 2)
+                    v = v.view(B, T, n_head, head_dim).transpose(1, 2)
+                    i = i.view(B, T, n_head, head_dim).transpose(1, 2)
+                    
+                    data_registry["layers"][layer_idx]["raw_q"] = q.detach().cpu()
+                    data_registry["layers"][layer_idx]["raw_k"] = k.detach().cpu()
+                    data_registry["layers"][layer_idx]["raw_v"] = v.detach().cpu()
+                    data_registry["layers"][layer_idx]["raw_i"] = i.detach().cpu()
+            return hook
+
+        def get_conv_hook(layer_idx, name, n_head, head_dim):
+            def hook(module, inp, out):
+                # Conv1d out is [B, D, T]
+                # We want [B, H, T, D_head]
+                B, D, T = out.shape
+                # Transpose to [B, T, D]
+                x = out.transpose(1, 2)
+                x = x.view(B, T, n_head, head_dim).transpose(1, 2)
+                data_registry["layers"][layer_idx][name] = x.detach().cpu()
+            return hook
+            
+        def get_mlp_hook(layer_idx):
+             def hook(module, inp, out):
+                 # inp[0] is x (input to mlp). out is result.
+                 # Check neon167 mlp. It has gate.
+                 # Capturing w2 input/output might be better?
+                 # User said "Adding gating vector is okayish".
+                 # Let's try to capture the gate if we can find it.
+                 # neon167 MLP: forward(x): c9=... gate=sigmoid(...) return w2(gate*w1(x))
+                 # Getting gate specifically requires hooking inside MLP or spying sigmoid.
+                 # Let's spy sigmoid for MLP gates.
+                 pass
+             return hook
+
+        # Spy sigmoid for MLP Gates (and Intent if needed, but we have Raw I)
         real_sigmoid = torch.sigmoid
+        sigmoid_counter = [0]
         def spy_sigmoid(input):
             val = input.detach().cpu()
-            if val.dim() == 4: data_registry["attn_intents"].append(val)
-            elif val.dim() == 3: data_registry["mlp_gates"].append(val)
-            return real_sigmoid(input)
+            res = real_sigmoid(input)
+            # Heuristic: MLP gate is 3D [B, T, D] usually. Intent is 4D [B, H, T, D] inside attn?
+            # In neon167:
+            # Attn intent: `y = torch.sigmoid(intent) * attn_out`. Intent is [B, H, T, D] (transposed).
+            # MLP gate: `gate = torch.sigmoid(...)`. Gate is [B, T, D_ff] or such? 
+            # Wait, PureHydraMLP: c_gate_proj -> d_ff. So [B, T, d_ff].
+            
+            # Simple heuristic: if we are inside MLP (how do we know?)
+            # Let's just store based on logic flow.
+            # Block 0: Attn (sigmoid I) -> MLP (sigmoid G)
+            
+            # Actually, we have "raw_i" which IS the intent before sigmoid (and convolution).
+            # The user wants "Gating vector".
+            if val.dim() == 3: 
+                # Likely MLP gate [B, T, D_ff]
+                # We can try to assign to current layer. 
+                # This depends on execution order: Attn then MLP.
+                # sdpa_counter is incremented inside SDPA.
+                # SDPA happens BEFORE MLP in the block.
+                # So if sdpa_counter is K (meaning we just finished attn for layer K-1), we are in MLP for layer K-1?
+                # No, sdpa_counter increments at END of SDPA.
+                # Layer 0: SDPA (counter becomes 1) -> MLP.
+                # So if counter is 1, we are in Layer 0 MLP.
+                idx = sdpa_counter[0] - 1
+                if 0 <= idx < len(data_registry["layers"]):
+                    data_registry["layers"][idx]["mlp_gate"] = res.detach().cpu() # Capture OUTPUT of sigmoid
+            return res
 
-        real_conv1d = F.conv1d
-        def spy_conv1d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
-            out = real_conv1d(input, weight, bias, stride, padding, dilation, groups)
-            if groups > 1 and out.dim() == 3:
-                data_registry["conv"].append({"kernel": weight.shape[2], "data": out.detach().cpu()})
-            return out
-
-        mlp_hooks = []
-        for block in model.blocks:
-            target = getattr(block.mlp, 'w2', block.mlp)
-            def make_hook():
-                def hook(module, inp, out):
-                    data_registry["mlp"].append({"input": inp[0].detach().cpu(), "output": out.detach().cpu()})
-                return hook
-            mlp_hooks.append(target.register_forward_hook(make_hook()))
+        for i, block in enumerate(model.blocks):
+            # Raw QKVI
+            hooks.append(block.attn.c_attn.register_forward_hook(get_raw_hook(i, config['n_head'], config['d_model'] // config['n_head'])))
+            
+            # Conv QKVI
+            hooks.append(block.attn.conv_q.register_forward_hook(get_conv_hook(i, "conv_q", config['n_head'], config['d_model'] // config['n_head'])))
+            hooks.append(block.attn.conv_k.register_forward_hook(get_conv_hook(i, "conv_k", config['n_head'], config['d_model'] // config['n_head'])))
+            hooks.append(block.attn.conv_v.register_forward_hook(get_conv_hook(i, "conv_v", config['n_head'], config['d_model'] // config['n_head'])))
+            hooks.append(block.attn.conv_i.register_forward_hook(get_conv_hook(i, "conv_i", config['n_head'], config['d_model'] // config['n_head'])))
 
         F.scaled_dot_product_attention = spy_sdpa
         torch.sigmoid = spy_sigmoid
-        F.conv1d = spy_conv1d
+        
         try:
             with torch.no_grad():
                 logits, _ = model(input_tensor)
@@ -209,24 +277,21 @@ class NeonModelEngine:
         finally:
             F.scaled_dot_product_attention = real_sdpa
             torch.sigmoid = real_sigmoid
-            F.conv1d = real_conv1d
-            for h in mlp_hooks: h.remove()
+            for h in hooks: h.remove()
 
-        # Get Top-K tokens for the predictor
+        # Get Top-K tokens
         probs = torch.softmax(last_logits, dim=-1)
         top_probs, top_indices = torch.topk(probs, 20)
         top_tokens = [tokenizer.decode([idx.item()]) for idx in top_indices]
 
         def optimize_tensor_data(t):
-             """Recursively convert tensors to lists, rounding floats to 4 decimals to save space."""
+             """Recursively convert tensors to lists, rounding floats to 4 decimals."""
              if isinstance(t, torch.Tensor):
                  t = t.float().cpu().numpy()
              
              if isinstance(t, (np.ndarray, np.generic)):
-                 # Replace inf/-inf with finite numbers to prevent JSON errors
-                 # NaN -> 0, Inf -> 1e5, -Inf -> -1e5 (Safe for visualization scaling)
+                 # Strict sanitization
                  t = np.nan_to_num(t, nan=0.0, posinf=1e5, neginf=-1e5)
-                 # Round and convert to list
                  if isinstance(t, np.ndarray):
                     return np.round(t, 4).tolist()
                  else:
@@ -238,15 +303,11 @@ class NeonModelEngine:
 
         return {
             "tokens": tokens,
-            "attn": optimize_tensor_data(data_registry["attn"]),
-            "q": optimize_tensor_data(data_registry["q"]),
-            "k": optimize_tensor_data(data_registry["k"]),
-            "v": optimize_tensor_data(data_registry["v"]),
-            "attn_intents": optimize_tensor_data(data_registry["attn_intents"]),
-            "attn_scores": optimize_tensor_data(data_registry["attn_scores"]),
-            "mlp_gates": optimize_tensor_data(data_registry["mlp_gates"]),
-            "mlp": optimize_tensor_data(data_registry["mlp"]),
-            "conv": optimize_tensor_data(data_registry["conv"]),
+            # Flatten layers for easier frontend assumption or keep structured?
+            # Old frontend expected keys like "attn", "q" which were lists of layers.
+            # Let's reconstruct that format to minimize frontend rewrite, or just pass new format.
+            # Passing new format "layers" is cleaner. I will update frontend.
+            "layers": optimize_tensor_data(data_registry["layers"]),
             "top_k_probs": optimize_tensor_data(top_probs),
             "top_k_tokens": top_tokens,
             "config": config

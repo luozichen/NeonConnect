@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,14 +11,16 @@
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
         window.mermaid = mermaid;
-        mermaid.initialize({ 
-            startOnLoad: true, 
+        mermaid.initialize({
+            startOnLoad: true,
             theme: 'dark',
             securityLevel: 'loose',
             flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' }
         });
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -49,16 +52,55 @@
             --theme-search: #00FFFF;
             --theme-code-execution: #FF0000;
         }
-        body { background-color: #0a0a0b; color: #fafafa; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
-        .tab-btn.active { border-bottom: 2px solid #6366f1; color: #6366f1; }
-        .plot-container { min-height: 350px; width: 100%; }
-        .mermaid-wrapper { width: 100%; overflow-x: auto; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 1rem; min-height: 400px; display: flex; align-items: center; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        input[type="range"] { accent-color: #6366f1; }
-        
+
+        body {
+            background-color: #0a0a0b;
+            color: #fafafa;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #6366f1;
+            color: #6366f1;
+        }
+
+        .plot-container {
+            min-height: 350px;
+            width: 100%;
+        }
+
+        .mermaid-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1rem;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        input[type="range"] {
+            accent-color: #6366f1;
+        }
+
         /* Legacy Switch Button */
         #legacy-switch-btn {
             position: fixed;
@@ -74,10 +116,11 @@
             font-size: 0.75rem;
             color: #71717a;
             transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
         #legacy-switch-btn:hover {
             color: #fff;
             border-color: #6366f1;
@@ -86,21 +129,26 @@
         }
     </style>
 </head>
+
 <body class="h-screen flex flex-col overflow-hidden font-sans text-sm md:text-base">
     <!-- Legacy Switch Button -->
     <a href="/neoncore" id="legacy-switch-btn">Switch to Legacy Chat</a>
 
     <!-- Header -->
-    <header class="h-16 border-b border-border flex items-center justify-between px-6 bg-surface/50 backdrop-blur-md z-20 shrink-0">
+    <header
+        class="h-16 border-b border-border flex items-center justify-between px-6 bg-surface/50 backdrop-blur-md z-20 shrink-0">
         <div class="flex items-center gap-3">
             <img src="{{ url_for('static', filename='logo.png') }}" class="w-8 h-8 rounded-lg shadow-lg">
             <h1 class="text-xl font-bold font-display tracking-tight">
-                <span class="text-code">N</span><span class="text-thought">e</span><span class="text-primary">o</span><span class="text-search">n</span> <span class="text-gray-400">CONNECT</span>
+                <span class="text-code">N</span><span class="text-thought">e</span><span
+                    class="text-primary">o</span><span class="text-search">n</span> <span
+                    class="text-gray-400">CONNECT</span>
             </h1>
         </div>
         <div class="flex items-center gap-4">
             <span class="text-xs font-mono text-gray-500">{{ username }}</span>
-            <a href="/logout" class="text-xs font-bold text-red-500/80 hover:text-red-400 uppercase tracking-wider">Logout</a>
+            <a href="/logout"
+                class="text-xs font-bold text-red-500/80 hover:text-red-400 uppercase tracking-wider">Logout</a>
         </div>
     </header>
 
@@ -108,8 +156,10 @@
         <!-- Sidebar -->
         <aside class="w-72 border-r border-border flex flex-col bg-surface/30 shrink-0 hidden lg:flex">
             <div class="p-4 border-b border-border">
-                <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Active Network</label>
-                <select id="model-select" class="w-full bg-table-row border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
+                <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Active
+                    Network</label>
+                <select id="model-select"
+                    class="w-full bg-table-row border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
                     <option value="">Loading...</option>
                 </select>
             </div>
@@ -127,10 +177,11 @@
             <div class="p-4 border-b border-border bg-surface/10 backdrop-blur-sm shrink-0">
                 <div class="max-w-4xl mx-auto flex gap-3">
                     <div class="flex-1 relative">
-                        <textarea id="prompt-input" rows="2" placeholder="Enter prompt to visualize..." 
+                        <textarea id="prompt-input" rows="2" placeholder="Enter prompt to visualize..."
                             class="w-full bg-surface/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none font-light custom-scrollbar">Harry looked at the mirror and saw</textarea>
                     </div>
-                    <button id="visualize-btn" class="px-8 py-2 bg-primary hover:bg-primary/80 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50 shrink-0">
+                    <button id="visualize-btn"
+                        class="px-8 py-2 bg-primary hover:bg-primary/80 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50 shrink-0">
                         Analyze
                     </button>
                 </div>
@@ -138,19 +189,32 @@
 
             <!-- Tabs -->
             <div class="flex border-b border-border bg-surface/5 px-4 overflow-x-auto no-scrollbar shrink-0">
-                <button class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all active whitespace-nowrap" data-tab="architecture">Structure</button>
-                <button class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap" data-tab="single-head">Heads Detailed</button>
-                <button class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap" data-tab="all-heads">Grid</button>
-                <button class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap" data-tab="mlp-acts">MLP</button>
-                <button class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap" data-tab="next-token">Predictor</button>
-                <button class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap" data-tab="inference">Live Chat</button>
+                <button
+                    class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all active whitespace-nowrap"
+                    data-tab="architecture">Structure</button>
+                <button
+                    class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                    data-tab="single-head">Heads Detailed</button>
+                <button
+                    class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                    data-tab="all-heads">Grid</button>
+                <button
+                    class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                    data-tab="mlp-acts">MLP</button>
+                <button
+                    class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                    data-tab="next-token">Predictor</button>
+                <button
+                    class="tab-btn px-5 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                    data-tab="inference">Live Chat</button>
             </div>
 
             <!-- Tab Content -->
             <div id="tab-content" class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative">
                 <div id="viz-container" class="max-w-6xl mx-auto">
                     <div class="text-center py-32 text-gray-500">
-                        <h2 class="text-lg font-bold text-gray-300 mb-2 uppercase tracking-tighter">Telemetric Interface Ready</h2>
+                        <h2 class="text-lg font-bold text-gray-300 mb-2 uppercase tracking-tighter">Telemetric Interface
+                            Ready</h2>
                         <p class="text-sm text-gray-500">Initialize analyzer to capture tensor activations.</p>
                     </div>
                 </div>
@@ -326,41 +390,46 @@ graph LR
                         <div class="flex-1">
                             <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1">Layer</label>
                             <select id="layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm appearance-none outline-none">
-                                ${Array.from({length: config.n_layers}, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
+                                ${Array.from({ length: config.n_layers }, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
                             </select>
                         </div>
                         <div class="flex-1">
                             <label class="block text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-1">Head</label>
                             <select id="head-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm appearance-none outline-none">
-                                ${Array.from({length: config.n_head}, (_, i) => `<option value="${i}">Head ${i}</option>`).join('')}
+                                ${Array.from({ length: config.n_head }, (_, i) => `<option value="${i}">Head ${i}</option>`).join('')}
                             </select>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <h4 class="text-[10px] font-bold uppercase tracking-widest text-primary">Attention Core & Gating</h4>
+                            <h4 class="text-[10px] font-bold uppercase tracking-widest text-primary">Attention Matrix</h4>
                             <div id="attn-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden"></div>
-                            <div id="attn-score-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden"></div>
-                            <div id="intent-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden"></div>
                         </div>
                         
                         <div class="space-y-4">
-                            <h4 class="text-[10px] font-bold uppercase tracking-widest text-search">Raw Tensor Projections</h4>
-                            <div id="q-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden h-64"></div>
-                            <div id="k-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden h-64"></div>
-                            <div id="v-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden h-64"></div>
-                            <div id="i-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden h-64"></div>
+                            <h4 class="text-[10px] font-bold uppercase tracking-widest text-search">Raw Core Projections (Linear)</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div id="q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
+                                <div id="k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
+                                <div id="v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
+                                <div id="i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
+                            </div>
                         </div>
 
                         <div class="xl:col-span-2 space-y-4 pt-8 border-t border-border">
-                            <h4 class="text-[10px] font-bold uppercase tracking-widest text-code">Convolution Feature Maps (DW K=3)</h4>
+                            <h4 class="text-[10px] font-bold uppercase tracking-widest text-code">Convolved Projections (DepthWise K=3)</h4>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div id="conv-q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
                                 <div id="conv-k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
                                 <div id="conv-v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
                                 <div id="conv-i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
                             </div>
+                        </div>
+                        
+                        <div class="xl:col-span-2 space-y-4 pt-8 border-t border-border">
+                             <h4 class="text-[10px] font-bold uppercase tracking-widest text-thought">Gating Vectors</h4>
+                             <div id="intent-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-32"></div>
                         </div>
                     </div>
                 </div>
@@ -378,7 +447,16 @@ graph LR
 
         function plotSingleHeadDetailed(layer, head) {
             const tokens = getTLabels(lastVisData.tokens);
-            const head_dim = lastVisData.q[layer][0][0][0].length;
+            // Access new data structure: lastVisData.layers[layer][key]
+            // Key is 'raw_q' [H, T, D] or 'attn' [B, H, T, T] -> [H, T, T] since we stripped B in backend sanitization for list
+            // Wait, optimized_tensor_data recursive list conversion preserves structure.
+            // Backend: attn is `w.detach().cpu()` -> [1, H, T, T].
+            // Backend: raw_q is [H, T, D] (squeezed B=1? No, we viewed as [B, T, H, D] then [B, H, T, D]... wait.
+            // In backend I did: `q = q.view(B, T, n_head, head_dim).transpose(1, 2)`. This is [B, H, T, D].
+            // If B=1, then [0][H][T][D].
+            // So we need to access [0][head].
+
+            const layerData = lastVisData.layers[layer];
 
             const baseL = {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
@@ -388,49 +466,45 @@ graph LR
                 margin: { l: 10, r: 10, b: 10, t: 30 }, hovermode: 'closest'
             };
 
-            const plotH = (id, z, title, colorscale='RdBu') => {
+            const plotH = (id, z, title, colorscale = 'RdBu') => {
                 if (!z) return;
                 Plotly.newPlot(id, [{
-                    z: z, x: Array.from({length: z[0].length}, (_, i) => `d${i}`), y: tokens,
+                    z: z, x: Array.from({ length: z[0].length }, (_, i) => `d${i}`), y: tokens,
                     type: 'heatmap', colorscale: colorscale, zmid: 0, showscale: false
-                }], { ...baseL, title: { text: title, font: { size: 9, weight: 'bold' } } }, {displayModeBar: false});
+                }], { ...baseL, title: { text: title, font: { size: 9, weight: 'bold' } } }, { displayModeBar: false });
             };
 
-            Plotly.newPlot('attn-plot', [{
-                z: lastVisData.attn[layer][0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false
-            }], { ...baseL, title: { text: 'ATTENTION WEIGHTS', font: { size: 9 } } }, {displayModeBar: false});
-
-            Plotly.newPlot('attn-score-plot', [{
-                z: lastVisData.attn_scores[layer][0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'RdBu', zmid: 0, showscale: false
-            }], { ...baseL, title: { text: 'ATTENTION SCORE (PRE-SOFTMAX)', font: { size: 9 } } }, {displayModeBar: false});
-
-            if (lastVisData.attn_intents) {
-                plotH('intent-plot', lastVisData.attn_intents[layer][0][head], 'GATING VECTOR (σ)', 'Viridis');
-                plotH('i-plot', lastVisData.attn_intents[layer][0][head], 'RAW I PROJECTION', 'RdBu');
+            // Attention
+            if (layerData.attn) {
+                Plotly.newPlot('attn-plot', [{
+                    z: layerData.attn[0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false
+                }], { ...baseL, title: { text: 'ATTENTION WEIGHTS', font: { size: 9 } } }, { displayModeBar: false });
             }
-            
-            plotH('q-plot', lastVisData.q[layer][0][head], 'Q PROJECTION', 'RdBu');
-            plotH('k-plot', lastVisData.k[layer][0][head], 'K PROJECTION', 'RdBu');
-            plotH('v-plot', lastVisData.v[layer][0][head], 'V PROJECTION', 'RdBu');
 
-            const baseConv = layer * 5;
-            const getHC = (idx) => {
-                if (!lastVisData.conv || !lastVisData.conv[idx]) return null;
-                const data = lastVisData.conv[idx].data;
-                const hd = data.length / lastVisData.config.n_head;
-                const headData = [];
-                for(let t=0; t<data[0].length; t++) {
-                    const row = [];
-                    for(let d=head*hd; d<(head+1)*hd; d++) row.push(data[d][t]);
-                    headData.push(row);
-                }
-                return headData;
-            };
+            // Raw QKVI
+            if (layerData.raw_q) plotH('q-plot', layerData.raw_q[0][head], 'RAW Q', 'RdBu');
+            if (layerData.raw_k) plotH('k-plot', layerData.raw_k[0][head], 'RAW K', 'RdBu');
+            if (layerData.raw_v) plotH('v-plot', layerData.raw_v[0][head], 'RAW V', 'RdBu');
+            if (layerData.raw_i) plotH('i-plot', layerData.raw_i[0][head], 'RAW I', 'RdBu');
 
-            const qC = getHC(baseConv + 0); if (qC) plotH('conv-q-plot', qC, 'CONV Q', 'RdBu');
-            const kC = getHC(baseConv + 1); if (kC) plotH('conv-k-plot', kC, 'CONV K', 'RdBu');
-            const vC = getHC(baseConv + 2); if (vC) plotH('conv-v-plot', vC, 'CONV V', 'RdBu');
-            const iC = getHC(baseConv + 3); if (iC) plotH('conv-i-plot', iC, 'CONV I', 'Viridis');
+            // Conv QKVI
+            if (layerData.conv_q) plotH('conv-q-plot', layerData.conv_q[0][head], 'CONV Q', 'RdBu');
+            if (layerData.conv_k) plotH('conv-k-plot', layerData.conv_k[0][head], 'CONV K', 'RdBu');
+            if (layerData.conv_v) plotH('conv-v-plot', layerData.conv_v[0][head], 'CONV V', 'RdBu');
+            if (layerData.conv_i) plotH('conv-i-plot', layerData.conv_i[0][head], 'CONV I', 'Viridis');
+
+            // MLP Gate (Single per block, maybe repeat for heads or just show once?)
+            // MLP Gate captured as [B, T, D_ff]. Not per head.
+            // Let's just visualize it if we have it?
+            // "Adding gating vector is okayish".
+            // It's [0][T][D].
+            if (layerData.mlp_gate) {
+                const z = layerData.mlp_gate[0]; // [T, D]
+                Plotly.newPlot('intent-plot', [{
+                    z: z, x: Array.from({ length: z[0].length }, (_, i) => `d${i}`), y: tokens,
+                    type: 'heatmap', colorscale: 'Viridis', showscale: false
+                }], { ...baseL, title: { text: 'MLP GATING VECTOR (σ)', font: { size: 9 } } }, { displayModeBar: false });
+            }
         }
 
         function renderAllHeads() {
@@ -440,32 +514,42 @@ graph LR
                 <div class="flex flex-col gap-6 py-4 overflow-x-auto custom-scrollbar">
                     <div class="flex min-w-[800px]">
                         <div class="w-20 shrink-0"></div>
-                        <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, 1fr);">
-                            ${Array.from({length: nh}, (_, i) => `<div class="text-center text-[10px] font-bold text-gray-500">HEAD ${i}</div>`).join('')}
+                        <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
+                            ${Array.from({ length: nh }, (_, i) => `<div class="text-center text-[10px] font-bold text-gray-500">HEAD ${i}</div>`).join('')}
                         </div>
                     </div>
-                    ${Array.from({length: nl}, (_, l) => `
+                    ${Array.from({ length: nl }, (_, l) => `
                         <div class="flex items-stretch min-w-[800px]">
                             <div class="w-20 shrink-0 flex items-center justify-end text-[10px] font-bold text-gray-500 border-r border-border pr-4 mr-4">LAYER ${l}</div>
-                            <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, 1fr);">
-                                ${Array.from({length: nh}, (_, h) => `<div id="grid-l${l}-h${h}" class="aspect-square bg-surface/20 border border-border rounded-xl"></div>`).join('')}
+                            <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
+                                ${Array.from({ length: nh }, (_, h) => `<div id="grid-l${l}-h${h}" class="aspect-square bg-surface/20 border border-border rounded-xl"></div>`).join('')}
                             </div>
                         </div>
                     `).join('')}
                 </div>
             `;
-            for(let l=0; l<nl; l++) {
-                for(let h=0; h<nh; h++) {
-                    Plotly.newPlot(`grid-l${l}-h${h}`, [{
-                        z: lastVisData.attn[l][0][h], type: 'heatmap', colorscale: 'Blues', showscale: false
-                    }], {
-                        margin: { l: 0, r: 0, b: 0, t: 0 },
-                        xaxis: { showticklabels: false, showgrid: false },
-                        yaxis: { autorange: 'reversed', showticklabels: false, showgrid: false },
-                        paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
-                    }, {staticPlot: true});
+
+            // This is likely where the Head 0 issue was. 
+            // 'repeat(${nh}, 1fr)' combined with Plotly auto-sizing might collapse empty divs or similar.
+            // Using minmax(0, 1fr) helps.
+            // Also ensuring the plots are rendered AFTER the DOM is settled.
+
+            requestAnimationFrame(() => {
+                for (let l = 0; l < nl; l++) {
+                    const layerAttn = lastVisData.layers[l].attn;
+                    if (!layerAttn) continue;
+                    for (let h = 0; h < nh; h++) {
+                        Plotly.newPlot(`grid-l${l}-h${h}`, [{
+                            z: layerAttn[0][h], type: 'heatmap', colorscale: 'Blues', showscale: false
+                        }], {
+                            margin: { l: 0, r: 0, b: 0, t: 0 },
+                            xaxis: { showticklabels: false, showgrid: false },
+                            yaxis: { autorange: 'reversed', showticklabels: false, showgrid: false },
+                            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
+                        }, { staticPlot: true, responsive: true });
+                    }
                 }
-            }
+            });
         }
 
         function renderMLP() {
@@ -475,7 +559,7 @@ graph LR
                     <div class="bg-surface/40 p-4 rounded-2xl border border-border max-w-xs">
                         <label class="block text-[10px] font-bold uppercase text-gray-500 mb-1">Block</label>
                         <select id="mlp-layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm outline-none">
-                            ${Array.from({length: nl}, (_, i) => `<option value="${i}">Block ${i}</option>`).join('')}
+                            ${Array.from({ length: nl }, (_, i) => `<option value="${i}">Block ${i}</option>`).join('')}
                         </select>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -497,23 +581,23 @@ graph LR
 
         function plotMLPAct(layer) {
             const tokens = getTLabels(lastVisData.tokens);
-            const data = lastVisData.mlp[layer].input[0]; 
+            const data = lastVisData.mlp[layer].input[0];
             const z = data[0].map((_, colIndex) => data.map(row => row[colIndex]));
             const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { color: '#71717a', size: 9, family: 'JetBrains Mono' },
-                xaxis: { tickangle: 45, automargin: true, gridcolor: '#27272a' }, 
+                xaxis: { tickangle: 45, automargin: true, gridcolor: '#27272a' },
                 yaxis: { automargin: true, showticklabels: false, gridcolor: '#27272a' },
                 margin: { l: 50, r: 20, b: 50, t: 30 }
             };
             Plotly.newPlot('mlp-act-plot', [{
-                z: z, x: tokens, y: Array.from({length: z.length}, (_, i) => `d${i}`),
+                z: z, x: tokens, y: Array.from({ length: z.length }, (_, i) => `d${i}`),
                 type: 'heatmap', colorscale: 'RdBu', zmid: 0, showscale: false
             }], layout);
             if (lastVisData.mlp_gates && lastVisData.mlp_gates[layer]) {
                 const gateData = lastVisData.mlp_gates[layer][0];
                 Plotly.newPlot('mlp-gate-plot', [{
-                    z: gateData, x: Array.from({length: gateData[0].length}, (_, i) => `d${i}`), y: tokens,
+                    z: gateData, x: Array.from({ length: gateData[0].length }, (_, i) => `d${i}`), y: tokens,
                     type: 'heatmap', colorscale: 'Viridis', showscale: false
                 }], { ...layout, yaxis: { ...layout.yaxis, autorange: 'reversed' } });
             }
@@ -579,4 +663,5 @@ graph LR
         init();
     </script>
 </body>
+
 </html>
