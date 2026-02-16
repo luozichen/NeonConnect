@@ -103,27 +103,34 @@
 
         .token-item {
             display: inline-block;
-            padding: 2px 6px;
+            padding: 2px 8px;
             margin: 2px;
             border-radius: 4px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            background: rgba(0, 255, 0, 0.05);
+            /* Neon Green Tint */
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            /* Neon Green Text */
         }
 
         .token-item:hover {
-            background: rgba(99, 102, 241, 0.2);
-            border-color: #6366f1;
+            background: rgba(0, 255, 0, 0.2);
+            border-color: #00ff00;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
         }
 
         .prompt-text {
-            color: #4ade80;
+            color: #00ff00;
+            /* Neon Green */
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
         }
 
         /* Green for prompt */
         .gen-text {
-            color: #e4e4e7;
+            color: #ffffff;
+            /* Bright White */
         }
 
         /* Default for generation */
@@ -212,6 +219,13 @@
                         Analyze
                     </button>
                 </div>
+                <!-- Tokenization Display (Moved here) -->
+                <div id="token-display"
+                    class="hidden max-w-4xl mx-auto mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+                    <h3 class="text-[10px] font-bold uppercase text-[#00ff00] tracking-widest mb-2 font-mono">
+                        Tokenization</h3>
+                    <div id="token-list" class="flex flex-wrap gap-1"></div>
+                </div>
             </div>
 
             <!-- Tabs -->
@@ -239,11 +253,7 @@
             <!-- Tab Content -->
             <div id="tab-content" class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative">
                 <div id="viz-container" class="max-w-6xl mx-auto space-y-6">
-                    <!-- Tokenization Display -->
-                    <div id="token-display" class="hidden bg-surface/20 rounded-xl border border-border p-4">
-                        <h3 class="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Tokenization</h3>
-                        <div id="token-list" class="flex flex-wrap"></div>
-                    </div>
+
 
                     <div id="main-viz-content">
                         <div class="text-center py-32 text-gray-500">
@@ -675,9 +685,9 @@ graph LR
         function renderInference() {
             vizContainer.innerHTML = `
                 <div class="max-w-2xl mx-auto space-y-6 py-6">
-                    <div class="bg-surface p-8 rounded-3xl border border-border shadow-2xl relative overflow-hidden">
-                        <!-- New Gradient: Red -> Green -> Blue -->
-                        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-green-500 to-blue-500"></div>
+                    <div class="bg-[#111] p-8 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden">
+                        <!-- New Gradient: Red -> Green -> Blue (Bright) -->
+                        <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(to right, #ff0000, #00ff00, #0000ff);"></div>
                         <h3 class="text-xl font-bold mb-6 flex items-center justify-between">
                             <div class="flex items-center gap-3"><span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span> Live Inference</div>
                             <button id="clear-console" class="text-[10px] font-bold text-gray-500 hover:text-red-400 uppercase tracking-widest">Clear</button>
