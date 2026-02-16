@@ -21,13 +21,9 @@ class NeonModelEngine:
         # Local paths relative to NeonConnect root
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         self.ckpt_dirs = [
-            os.path.join(base_dir, "models"),
-            "/home/luozichen/NeonBench/checkpoints"
+            os.path.join(base_dir, "models")
         ]
-        self.tok_dirs = [
-            os.path.join(base_dir, "tokenizers"),
-            "/home/luozichen/NeonBench/tokenizers"
-        ]
+        self.tok_dir = os.path.join(base_dir, "tokenizers")
 
     def get_available_models(self):
         ckpts = []
@@ -54,27 +50,17 @@ class NeonModelEngine:
         return ckpts
 
     def find_tokenizer(self, tok_name, data_name):
-        # Specific overrides
-        if tok_name == "tok5" and "wiki" in data_name:
-             for d in self.tok_dirs:
-                p = os.path.join(d, "wiki103_tok5.json")
-                if os.path.exists(p): return p
-
-        for d in self.tok_dirs:
-            p = os.path.join(d, f"{data_name}_{tok_name}.json")
-            if os.path.exists(p): return p
-            
-            data_alias = data_name.replace("hp0", "hp")
-            p = os.path.join(d, f"{data_alias}_{tok_name}.json")
-            if os.path.exists(p): return p
-            
-            p = os.path.join(d, f"{data_name}.json")
-            if os.path.exists(p): return p
-            
-            if os.path.isdir(d):
-                for f in os.listdir(d):
-                    if f.endswith(f"_{tok_name}.json") and (data_name in f or data_alias in f):
-                        return os.path.join(d, f)
+        p = os.path.join(self.tok_dir, f"{data_name}_{tok_name}.json")
+        if os.path.exists(p): return p
+        data_alias = data_name.replace("hp0", "hp")
+        p = os.path.join(self.tok_dir, f"{data_alias}_{tok_name}.json")
+        if os.path.exists(p): return p
+        p = os.path.join(self.tok_dir, f"{data_name}.json")
+        if os.path.exists(p): return p
+        if os.path.isdir(self.tok_dir):
+            for f in os.listdir(self.tok_dir):
+                if f.endswith(f"_{tok_name}.json") and (data_name in f or data_alias in f):
+                    return os.path.join(self.tok_dir, f)
         return None
 
     def load_model(self, model_id):
