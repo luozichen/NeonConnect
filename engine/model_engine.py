@@ -52,20 +52,13 @@ class NeonModelEngine:
         return ckpts
 
     def find_tokenizer(self, tok_name, data_name):
-        # 1. Try exact dataset + tok match (e.g. wiki103_tok4.json)
         p = os.path.join(self.tok_dir, f"{data_name}_{tok_name}.json")
         if os.path.exists(p): return p
-        
-        # 2. Try alias hp0 -> hp
         data_alias = data_name.replace("hp0", "hp")
         p = os.path.join(self.tok_dir, f"{data_alias}_{tok_name}.json")
         if os.path.exists(p): return p
-        
-        # 3. Try just the data name
         p = os.path.join(self.tok_dir, f"{data_name}.json")
         if os.path.exists(p): return p
-
-        # 4. Fallback search
         if os.path.isdir(self.tok_dir):
             for f in os.listdir(self.tok_dir):
                 if f.endswith(f"_{tok_name}.json") and (data_name in f or data_alias in f):
@@ -103,11 +96,8 @@ class NeonModelEngine:
         config['vocab_size'] = vocab_size
 
         cls_name = model_name.capitalize()
-        # Import from local networks subpackage
-        # We use relative import logic
         mod_name = f"NeonConnect.networks.{model_name}"
         if mod_name not in sys.modules:
-            # Absolute import from the perspective of the flask app root
             mod = importlib.import_module(mod_name)
         else:
             mod = sys.modules[mod_name]
@@ -166,8 +156,10 @@ class NeonModelEngine:
             "conv": []
         }
 
+        # SDPA Hook
         real_sdpa = F.scaled_dot_product_attention
         def spy_sdpa(q, k, v, *args, **kwargs):
+            # q, k, v input to SDPA are usually [B, n_head, T, head_dim]
             data_registry["q"].append(q.detach().cpu())
             data_registry["k"].append(k.detach().cpu())
             data_registry["v"].append(v.detach().cpu())
@@ -181,15 +173,20 @@ class NeonModelEngine:
             data_registry["attn"].append(w.detach().cpu())
             return w @ v
 
+        # Intent Hook
         real_sigmoid = torch.sigmoid
         def spy_sigmoid(input):
+            # Capture inputs to sigmoid. For Neon167 Attention it's the Intent vector.
+            # Shape should be [B, n_head, T, head_dim] or [B, T, C]
             if input.dim() in [3, 4]:
                 data_registry["intent"].append(input.detach().cpu())
             return real_sigmoid(input)
 
+        # Conv Hook
         real_conv1d = F.conv1d
         def spy_conv1d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1):
             out = real_conv1d(input, weight, bias, stride, padding, dilation, groups)
+            # Capture depthwise intermediate states
             if groups > 1 and out.dim() == 3:
                 data_registry["conv"].append({
                     "kernel": weight.shape[2],
@@ -197,6 +194,7 @@ class NeonModelEngine:
                 })
             return out
 
+        # MLP Hook
         mlp_hooks = []
         for block in model.blocks:
             target = getattr(block.mlp, 'w2', block.mlp)
