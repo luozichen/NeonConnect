@@ -101,6 +101,33 @@
             accent-color: #6366f1;
         }
 
+        .token-item {
+            display: inline-block;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .token-item:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+        }
+
+        .prompt-text {
+            color: #4ade80;
+        }
+
+        /* Green for prompt */
+        .gen-text {
+            color: #e4e4e7;
+        }
+
+        /* Default for generation */
+
         /* Legacy Switch Button */
         #legacy-switch-btn {
             position: fixed;
@@ -211,11 +238,20 @@
 
             <!-- Tab Content -->
             <div id="tab-content" class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative">
-                <div id="viz-container" class="max-w-6xl mx-auto">
-                    <div class="text-center py-32 text-gray-500">
-                        <h2 class="text-lg font-bold text-gray-300 mb-2 uppercase tracking-tighter">Telemetric Interface
-                            Ready</h2>
-                        <p class="text-sm text-gray-500">Initialize analyzer to capture tensor activations.</p>
+                <div id="viz-container" class="max-w-6xl mx-auto space-y-6">
+                    <!-- Tokenization Display -->
+                    <div id="token-display" class="hidden bg-surface/20 rounded-xl border border-border p-4">
+                        <h3 class="text-[10px] font-bold uppercase text-gray-500 tracking-widest mb-2">Tokenization</h3>
+                        <div id="token-list" class="flex flex-wrap"></div>
+                    </div>
+
+                    <div id="main-viz-content">
+                        <div class="text-center py-32 text-gray-500">
+                            <h2 class="text-lg font-bold text-gray-300 mb-2 uppercase tracking-tighter">Telemetric
+                                Interface
+                                Ready</h2>
+                            <p class="text-sm text-gray-500">Initialize analyzer to capture tensor activations.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -289,6 +325,15 @@
                 });
                 if (!res.ok) throw new Error(`Status ${res.status}`);
                 lastVisData = await res.json();
+
+                // Populate Token Display
+                const tokenList = document.getElementById('token-list');
+                const tokenDisplay = document.getElementById('token-display');
+                if (tokenList && lastVisData.tokens) {
+                    tokenDisplay.classList.remove('hidden');
+                    tokenList.innerHTML = lastVisData.tokens.map(t => `<span class="token-item">${cleanT(t)}</span>`).join('');
+                }
+
                 renderTab(document.querySelector('.tab-btn.active').dataset.tab);
             } catch (e) {
                 vizContainer.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl">Error: ${e.message}</div>`;
@@ -631,7 +676,8 @@ graph LR
             vizContainer.innerHTML = `
                 <div class="max-w-2xl mx-auto space-y-6 py-6">
                     <div class="bg-surface p-8 rounded-3xl border border-border shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-thought to-search"></div>
+                        <!-- New Gradient: Red -> Green -> Blue -->
+                        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-green-500 to-blue-500"></div>
                         <h3 class="text-xl font-bold mb-6 flex items-center justify-between">
                             <div class="flex items-center gap-3"><span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span> Live Inference</div>
                             <button id="clear-console" class="text-[10px] font-bold text-gray-500 hover:text-red-400 uppercase tracking-widest">Clear</button>
@@ -656,16 +702,25 @@ graph LR
             const tr = document.getElementById('temp-range'); const tv = document.getElementById('temp-val'); tr.oninput = () => tv.textContent = tr.value;
             const lr = document.getElementById('tokens-range'); const lv = document.getElementById('tokens-val'); lr.oninput = () => lv.textContent = lr.value;
             const kr = document.getElementById('topk-range'); const kv = document.getElementById('topk-val'); kr.oninput = () => kv.textContent = kr.value;
-            clear.onclick = () => out.textContent = "Ready...";
+            clear.onclick = () => out.innerHTML = "Ready..."; // innerHTML for color rendering
             send.onclick = async () => {
                 const p = inp.value; if (!p) return;
-                send.disabled = true; out.textContent = "Processing...";
+                send.disabled = true; out.innerHTML = "Processing...";
                 try {
                     const res = await fetch('/api/neonconnect/generate', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ model_id: currentModel.id, prompt: p, max_tokens: parseInt(lr.value), temperature: parseFloat(tr.value), top_k: parseInt(kr.value) })
                     });
-                    const data = await res.json(); out.textContent = data.result;
+                    const data = await res.json();
+                    if (data.prompt && data.completion) {
+                        // Render with colors: Prompt Green, Completion Default
+                        out.innerHTML = `<span class="prompt-text">${data.prompt}</span><span class="gen-text">${data.completion}</span>`;
+                    } else if (data.result) {
+                        // Fallback
+                        out.textContent = data.result;
+                    } else if (data.error) {
+                        out.textContent = "Error: " + data.error;
+                    }
                 } catch (e) { out.textContent = "Error: " + e.message; }
                 finally { send.disabled = false; }
             };

@@ -121,7 +121,14 @@ class NeonModelEngine:
             idx = torch.cat([idx, next_token], dim=1)
             generated.append(next_token.item())
             if next_token.item() == 0: break
-        return tokenizer.decode(generated)
+        
+        # Return prompt and completion separately for UI styling
+        prompt_ids = ids
+        new_ids = generated[len(ids):]
+        return {
+            "prompt": tokenizer.decode(prompt_ids),
+            "completion": tokenizer.decode(new_ids)
+        }
 
     def capture_visualization(self, model_id, prompt):
         # Global lock to prevent concurrent hook patching
