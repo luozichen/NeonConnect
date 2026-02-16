@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon CONNECT | Model Visualizer</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        background: '#0a0a0b',
+                        surface: '#1a1a1d',
+                        surface2: '#252529',
+                        primary: '#6366f1',
+                        border: '#2a2a2f',
+                        thought: '#FF00FF',
+                        search: '#00FFFF',
+                        code: '#FF0000'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0a0b; color: #fafafa; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        .tab-btn.active { border-bottom: 2px solid #6366f1; color: #6366f1; }
+        .plot-container { min-height: 400px; width: 100%; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden font-sans">
+    <!-- Header -->
+    <header class="h-16 border-b border-border flex items-center justify-between px-6 bg-surface/50 backdrop-blur-md z-20">
+        <div class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='logo.png') }}" class="w-8 h-8 rounded-lg">
+            <h1 class="text-xl font-bold font-display tracking-tight">
+                <span class="text-code">N</span><span class="text-thought">e</span><span class="text-primary">o</span><span class="text-search">n</span> <span class="text-gray-400">CONNECT</span>
+            </h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/neoncore" class="text-sm text-gray-400 hover:text-white transition-colors">NeonCore Chat</a>
+            <div class="h-4 w-[1px] bg-border"></div>
+            <span class="text-sm font-mono text-muted">{{ username }}</span>
+            <a href="/logout" class="text-sm text-red-400 hover:text-red-300">Logout</a>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden">
+        <!-- Sidebar: Model Selection & Info -->
+        <aside class="w-80 border-r border-border flex flex-col bg-surface/30">
+            <div class="p-4 border-b border-border">
+                <label class="block text-xs font-mono uppercase text-gray-500 mb-2">Selected Model</label>
+                <select id="model-select" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                    <option value="">Loading models...</option>
+                </select>
+            </div>
+            <div id="model-info" class="p-4 flex-1 overflow-y-auto custom-scrollbar space-y-4">
+                <div class="animate-pulse space-y-3">
+                    <div class="h-4 bg-surface2 rounded w-3/4"></div>
+                    <div class="h-4 bg-surface2 rounded w-1/2"></div>
+                    <div class="h-20 bg-surface2 rounded"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content: Controls & Tabs -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Bar: Prompt Input -->
+            <div class="p-4 border-b border-border bg-surface/10">
+                <div class="max-w-4xl mx-auto flex gap-3">
+                    <textarea id="prompt-input" rows="2" placeholder="Enter prompt to visualize..." 
+                        class="flex-1 bg-surface border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none font-light">Harry looked at the mirror and saw</textarea>
+                    <button id="visualize-btn" class="px-6 py-2 bg-primary hover:bg-primary/80 text-white rounded-xl font-medium transition-all shadow-lg shadow-primary/20 disabled:opacity-50">
+                        Visualize
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="flex border-b border-border bg-surface/5 px-4">
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors active" data-tab="single-head">Single Head</button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="all-heads">All Heads</button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="mlp-acts">MLP Activations</button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="next-token">Next Token</button>
+                <button class="tab-btn px-4 py-3 text-sm font-medium text-gray-400 hover:text-white transition-colors" data-tab="inference">Live Chat</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab-content" class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <!-- Placeholder for dynamic content -->
+                <div id="viz-container" class="max-w-6xl mx-auto">
+                    <div class="text-center py-20 text-gray-500">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.75 17L9 21h6l-.75-4M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <p>Select a model and enter a prompt to begin architectural visualization.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // JS state
+        let currentModel = null;
+        let lastVisData = null;
+        let models = [];
+
+        // Elements
+        const modelSelect = document.getElementById('model-select');
+        const modelInfo = document.getElementById('model-info');
+        const promptInput = document.getElementById('prompt-input');
+        const visualizeBtn = document.getElementById('visualize-btn');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const vizContainer = document.getElementById('viz-container');
+
+        // Initialize
+        async function init() {
+            try {
+                const res = await fetch('/api/neonconnect/models');
+                models = await res.json();
+                modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+                if (models.length > 0) {
+                    selectModel(models[0].id);
+                }
+            } catch (e) {
+                console.error("Failed to load models:", e);
+            }
+        }
+
+        function selectModel(id) {
+            currentModel = models.find(m => m.id === id);
+            modelInfo.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">${currentModel.model_name}</h3>
+                        <p class="text-xs text-gray-500 font-mono">ID: ${currentModel.id}</p>
+                    </div>
+                    <div class="bg-surface p-3 rounded-lg border border-border">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <span class="text-gray-500">Architecture</span>
+                            <span class="text-right text-gray-300">${currentModel.model_name}</span>
+                            <span class="text-gray-500">Tokenizer</span>
+                            <span class="text-right text-gray-300">${currentModel.tok_name}</span>
+                            <span class="text-gray-500">Dataset</span>
+                            <span class="text-right text-gray-300">${currentModel.data_name}</span>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-400 leading-relaxed">
+                        Architecture details for ${currentModel.model_name} are optimized for CPU-based inference on PythonAnywhere.
+                    </div>
+                </div>
+            `;
+        }
+
+        modelSelect.addEventListener('change', (e) => selectModel(e.target.value));
+
+        // Tab Switching
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderTab(btn.dataset.tab);
+            });
+        });
+
+        async function visualize() {
+            if (!currentModel) return;
+            visualizeBtn.disabled = true;
+            visualizeBtn.textContent = "Thinking...";
+            vizContainer.innerHTML = `<div class="flex items-center justify-center py-20"><div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>`;
+
+            try {
+                const res = await fetch('/api/neonconnect/visualize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model_id: currentModel.id,
+                        prompt: promptInput.value
+                    })
+                });
+                lastVisData = await res.json();
+                renderTab(document.querySelector('.tab-btn.active').dataset.tab);
+            } catch (e) {
+                vizContainer.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg">Error: ${e.message}</div>`;
+            } finally {
+                visualizeBtn.disabled = false;
+                visualizeBtn.textContent = "Visualize";
+            }
+        }
+
+        visualizeBtn.addEventListener('click', visualize);
+
+        function renderTab(tabId) {
+            if (!lastVisData) return;
+            vizContainer.innerHTML = '';
+
+            if (tabId === 'single-head') {
+                renderSingleHead();
+            } else if (tabId === 'all-heads') {
+                renderAllHeads();
+            } else if (tabId === 'mlp-acts') {
+                renderMLP();
+            } else if (tabId === 'next-token') {
+                renderNextToken();
+            } else if (tabId === 'inference') {
+                renderInference();
+            }
+        }
+
+        function cleanToken(t) {
+            return t.replace('Ġ', '·').replace('Ċ', '↵').replace('▁', '·');
+        }
+
+        function getTokenLabels(tokens) {
+            return tokens.map((t, i) => `${i}:${cleanToken(t)}`);
+        }
+
+        function renderSingleHead() {
+            const config = lastVisData.config;
+            const n_layers = config.n_layers;
+            const n_heads = config.n_head;
+
+            vizContainer.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex gap-4 items-end">
+                        <div class="flex-1">
+                            <label class="block text-xs font-mono text-gray-500 mb-1">Layer</label>
+                            <select id="layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm">
+                                ${Array.from({length: n_layers}, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-mono text-gray-500 mb-1">Head</label>
+                            <select id="head-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm">
+                                ${Array.from({length: n_heads}, (_, i) => `<option value="${i}">Head ${i}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div id="attn-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
+                    <div id="received-plot" class="plot-container bg-surface/20 rounded-xl overflow-hidden border border-border"></div>
+                </div>
+            `;
+
+            const update = () => {
+                const l = parseInt(document.getElementById('layer-sel').value);
+                const h = parseInt(document.getElementById('head-sel').value);
+                plotSingleHead(l, h);
+            };
+
+            document.getElementById('layer-sel').addEventListener('change', update);
+            document.getElementById('head-sel').addEventListener('change', update);
+            update();
+        }
+
+        function plotSingleHead(layer, head) {
+            const tokens = getTokenLabels(lastVisData.tokens);
+            // lastVisData.attn is [layer][batch][head][q][k]
+            const z = lastVisData.attn[layer][0][head];
+
+            const data = [{
+                z: z,
+                x: tokens,
+                y: tokens,
+                type: 'heatmap',
+                colorscale: 'Blues',
+                showscale: true
+            }];
+
+            const layout = {
+                title: `Layer ${layer} - Head ${head} Attention Weights`,
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#a1a1aa', size: 10 },
+                xaxis: { tickangle: 45, automargin: true },
+                yaxis: { autorange: 'reversed', automargin: true },
+                margin: { l: 50, r: 50, b: 100, t: 50 }
+            };
+
+            Plotly.newPlot('attn-plot', data, layout, {responsive: true});
+
+            // Attention Received
+            const received = z[0].map((_, colIndex) => z.map(row => row[colIndex]).reduce((a, b) => a + b, 0));
+            const dataRec = [{
+                x: tokens,
+                y: received,
+                type: 'bar',
+                marker: { color: '#6366f1' }
+            }];
+            const layoutRec = {
+                title: 'Attention Received per Token',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#a1a1aa', size: 10 },
+                xaxis: { tickangle: 45, automargin: true },
+                yaxis: { gridcolor: '#2a2a2f' },
+                margin: { l: 50, r: 50, b: 100, t: 50 }
+            };
+            Plotly.newPlot('received-plot', dataRec, layoutRec, {responsive: true});
+        }
+
+        function renderAllHeads() {
+            const n_layers = lastVisData.config.n_layers;
+            vizContainer.innerHTML = `
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-1">Layer</label>
+                        <select id="layer-sel-all" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm max-w-xs">
+                            ${Array.from({length: n_layers}, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div id="all-heads-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            `;
+
+            const update = () => {
+                const l = parseInt(document.getElementById('layer-sel-all').value);
+                plotAllHeads(l);
+            };
+            document.getElementById('layer-sel-all').addEventListener('change', update);
+            update();
+        }
+
+        function plotAllHeads(layer) {
+            const grid = document.getElementById('all-heads-grid');
+            grid.innerHTML = '';
+            const n_heads = lastVisData.config.n_head;
+            const tokens = getTokenLabels(lastVisData.tokens);
+
+            for (let h = 0; h < n_heads; h++) {
+                const id = `head-plot-${h}`;
+                const div = document.createElement('div');
+                div.id = id;
+                div.className = 'h-80 bg-surface/20 rounded-xl border border-border';
+                grid.appendChild(div);
+
+                const z = lastVisData.attn[layer][0][h];
+                Plotly.newPlot(id, [{
+                    z: z, x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false
+                }], {
+                    title: `Head ${h}`,
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: '#a1a1aa', size: 8 },
+                    xaxis: { showticklabels: false },
+                    yaxis: { autorange: 'reversed', showticklabels: false },
+                    margin: { l: 10, r: 10, b: 10, t: 30 }
+                }, {displayModeBar: false});
+            }
+        }
+
+        function renderMLP() {
+            const n_layers = lastVisData.config.n_layers;
+            vizContainer.innerHTML = `
+                <div class="space-y-6">
+                    <div id="mlp-norm-plot" class="plot-container bg-surface/20 rounded-xl border border-border"></div>
+                    <div class="h-[1px] bg-border"></div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-1">Layer Details</label>
+                        <select id="mlp-layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm max-w-xs">
+                            ${Array.from({length: n_layers}, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div id="mlp-act-plot" class="plot-container bg-surface/20 rounded-xl border border-border" style="height: 600px;"></div>
+                </div>
+            `;
+
+            plotMLPNorms();
+            const update = () => plotMLPAct(parseInt(document.getElementById('mlp-layer-sel').value));
+            document.getElementById('mlp-layer-sel').addEventListener('change', update);
+            update();
+        }
+
+        function plotMLPNorms() {
+            const tokens = getTokenLabels(lastVisData.tokens);
+            const n_layers = lastVisData.config.n_layers;
+            
+            // lastVisData.mlp is [layer]{input: [batch, T, d_ff], output: [batch, T, d_model]}
+            const z = [];
+            for (let l = 0; l < n_layers; l++) {
+                const out = lastVisData.mlp[l].output[0]; // [T, d_model]
+                const norms = out.map(row => Math.sqrt(row.reduce((a, b) => a + b*b, 0)));
+                z.push(norms);
+            }
+
+            Plotly.newPlot('mlp-norm-plot', [{
+                z: z, x: tokens, y: Array.from({length: n_layers}, (_, i) => `Layer ${i}`),
+                type: 'heatmap', colorscale: 'Oranges'
+            }], {
+                title: 'MLP Output Norms (Signal Strength)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#a1a1aa', size: 10 },
+                xaxis: { tickangle: 45, automargin: true },
+                yaxis: { automargin: true },
+                margin: { l: 80, r: 50, b: 100, t: 50 }
+            });
+        }
+
+        function plotMLPAct(layer) {
+            const tokens = getTokenLabels(lastVisData.tokens);
+            const data = lastVisData.mlp[layer].input[0]; // [T, d_ff]
+            
+            // Transpose for Heatmap: [d_ff, T]
+            const z = data[0].map((_, colIndex) => data.map(row => row[colIndex]));
+
+            Plotly.newPlot('mlp-act-plot', [{
+                z: z, x: tokens, y: Array.from({length: z.length}, (_, i) => `d${i}`),
+                type: 'heatmap', colorscale: 'RdBu', zmid: 0
+            }], {
+                title: `MLP Hidden States - Layer ${layer} (${z.length} dims)`,
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#a1a1aa', size: 10 },
+                xaxis: { tickangle: 45, automargin: true },
+                yaxis: { automargin: true, showticklabels: false },
+                margin: { l: 50, r: 50, b: 100, t: 50 }
+            });
+        }
+
+        function renderNextToken() {
+            vizContainer.innerHTML = `<div id="probs-plot" class="plot-container bg-surface/20 rounded-xl border border-border" style="height: 600px;"></div>`;
+            
+            const logits = lastVisData.logits;
+            // Softmax
+            const maxLogit = Math.max(...logits);
+            const exps = logits.map(l => Math.exp(l - maxLogit));
+            const sumExps = exps.reduce((a, b) => a + b, 0);
+            const probs = exps.map(e => e / sumExps);
+
+            // Get top 20
+            const indexed = probs.map((p, i) => ({p, i}));
+            indexed.sort((a, b) => b.p - a.p);
+            const top20 = indexed.slice(0, 20);
+
+            // We don't have the tokenizer decode map in JS easily for all IDs, 
+            // but we can show IDs and maybe fetch some? 
+            // For now, let's just show indices.
+            
+            Plotly.newPlot('probs-plot', [{
+                x: top20.map(x => x.p),
+                y: top20.map(x => `ID:${x.i}`),
+                type: 'bar', orientation: 'h', marker: {color: '#6366f1'}
+            }], {
+                title: 'Next Token Probabilities (Top 20)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#a1a1aa', size: 10 },
+                xaxis: { gridcolor: '#2a2a2f' },
+                yaxis: { autorange: 'reversed' },
+                margin: { l: 100, r: 50, b: 50, t: 50 }
+            });
+        }
+
+        function renderInference() {
+            vizContainer.innerHTML = `
+                <div class="max-w-2xl mx-auto space-y-6">
+                    <div class="bg-surface p-6 rounded-2xl border border-border shadow-xl">
+                        <h3 class="text-lg font-bold mb-4">Chat with ${currentModel.model_name}</h3>
+                        <div id="chat-output" class="min-h-[200px] bg-background/50 rounded-xl p-4 mb-4 font-light leading-relaxed whitespace-pre-wrap text-gray-300 border border-border/50"></div>
+                        <div class="flex gap-2">
+                            <input id="chat-input" type="text" class="flex-1 bg-background border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Ask something...">
+                            <button id="chat-send" class="px-4 py-2 bg-primary rounded-lg text-sm font-medium">Send</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const out = document.getElementById('chat-output');
+            const inp = document.getElementById('chat-input');
+            const send = document.getElementById('chat-send');
+
+            send.addEventListener('click', async () => {
+                const p = inp.value;
+                if (!p) return;
+                send.disabled = true;
+                out.textContent = "Generating...";
+                
+                try {
+                    const res = await fetch('/api/neonconnect/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model_id: currentModel.id,
+                            prompt: p,
+                            max_tokens: 150
+                        })
+                    });
+                    const data = await res.json();
+                    out.textContent = data.result;
+                } catch (e) {
+                    out.textContent = "Error: " + e.message;
+                } finally {
+                    send.disabled = false;
+                }
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
