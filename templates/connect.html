@@ -388,6 +388,9 @@
         function renderArchitecture() {
             const mermaidCode = `
 graph LR
+    %% Styles
+    linkStyle default interpolate linear
+    
     A["Sequence"] --> B["Embedding"]
     B --> C["Residual Stream"]
     
@@ -399,20 +402,20 @@ graph LR
             direction LR
             LN1 --> PROJ["C_Attn Linear"]
             
-            PROJ --> S1["Q Split"]
-            PROJ --> S2["K Split"]
-            PROJ --> S3["V Split"]
-            PROJ --> S4["I Split"]
+            PROJ -- Q --> S1["Q Split"]
+            PROJ -- K --> S2["K Split"]
+            PROJ -- V --> S3["V Split"]
+            PROJ -- I --> S4["I Split"]
             
             S1 --> CQ["K3 DepthConv"]
             S2 --> CK["K3 DepthConv"]
             S3 --> CV["K3 DepthConv"]
             S4 --> CI["K3 DepthConv"]
             
-            CQ --> ROPE1["ROPE"]
-            CK --> ROPE2["ROPE"]
+            CQ --> ROPE1["RoPE"]
+            CK --> ROPE2["RoPE"]
             
-            ROPE1 --> DOT["Softmax(Q @ Kᵀ)"]
+            ROPE1 --> DOT["Softmax(Q @ Kᵀ / √d)"]
             ROPE2 --> DOT
             DOT --> WV["Attn @ V"]
             CV --> WV
