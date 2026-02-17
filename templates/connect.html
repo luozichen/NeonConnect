@@ -386,6 +386,19 @@
         function getTLabels(tokens) { return (tokens || []).map((t, i) => `${i}:${cleanT(t)}`); }
 
         function renderArchitecture() {
+            const currentModelId = modelSelect.value || "";
+            let attnGateLabel = "Intent Gating (⊙ σ(I))";
+            let mlpGateLabel = "Hadamard (⊙ σ)";
+
+            if (currentModelId.includes("neon185")) {
+                mlpGateLabel = "Hadamard (⊙ SiLU)";
+            } else if (currentModelId.includes("neon186")) {
+                attnGateLabel = "Intent Gating (⊙ SiLU(I))";
+            } else if (currentModelId.includes("neon187")) {
+                attnGateLabel = "Intent Gating (⊙ SiLU(I))";
+                mlpGateLabel = "Hadamard (⊙ SiLU)";
+            }
+
             const mermaidCode = `
 graph LR
     %% Styles
@@ -420,7 +433,7 @@ graph LR
             DOT --> WV["Attn @ V"]
             CV --> WV
             
-            WV --> GATE["Intent Gating (⊙ σ(I))"]
+            WV --> GATE["${attnGateLabel}"]
             CI --> GATE
             
             GATE --> CPR["C_Proj Linear"]
@@ -436,7 +449,7 @@ graph LR
             LN2 --> HW1["Content W1"]
             LN2 --> HC9["K9 DepthConv"]
             HC9 --> HG["Gate Pattern"]
-            HG --> HM["Hadamard (⊙ σ)"]
+            HG --> HM["${mlpGateLabel}"]
             HW1 --> HM
             HM --> HW2["W2 Linear"]
         end
