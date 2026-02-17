@@ -6,7 +6,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.neon015 import RMSNorm, apply_rotary_emb
+from .neon015 import RMSNorm, apply_rotary_emb
 
 class FullMultiHeadConvAttention(nn.Module):
     def __init__(self, config):
