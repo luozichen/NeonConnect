@@ -126,8 +126,8 @@ class NeonModelEngine:
         prompt_ids = ids
         new_ids = generated[len(ids):]
         return {
-            "prompt": tokenizer.decode(prompt_ids),
-            "completion": tokenizer.decode(new_ids)
+            "prompt": tokenizer.decode(prompt_ids).replace(" @-@ ", "-"),
+            "completion": tokenizer.decode(new_ids).replace(" @-@ ", "-")
         }
 
     def capture_visualization(self, model_id, prompt):
