@@ -18,9 +18,7 @@
             flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' }
         });
     </script>
-    <!-- Google Sans Flex via Fontsource CDN -->
     <link href="https://cdn.jsdelivr.net/fontsource/css/google-sans-flex@latest/index.css" rel="stylesheet">
-    <!-- JetBrains Mono for monospace -->
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -69,7 +67,6 @@
             min-height: 100vh;
         }
 
-        /* Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -157,7 +154,6 @@
             border-radius: 2px;
         }
 
-        /* Tab content fade-in */
         .tab-content-fade {
             animation: fadeIn 300ms ease;
         }
@@ -174,7 +170,6 @@
             }
         }
 
-        /* Plots */
         .plot-container {
             min-height: 350px;
             width: 100%;
@@ -199,7 +194,6 @@
             accent-color: #6366f1;
         }
 
-        /* Tokens */
         .token-item {
             display: inline-block;
             padding: 3px 10px;
@@ -227,7 +221,6 @@
             color: #ffffff;
         }
 
-        /* Toggle button */
         .sidebar-toggle {
             width: 32px;
             height: 32px;
@@ -249,7 +242,6 @@
             color: #fff;
         }
 
-        /* Model badge */
         .model-badge {
             display: inline-flex;
             align-items: center;
@@ -263,7 +255,6 @@
             color: #a5b4fc;
         }
 
-        /* Input landing */
         .landing-container {
             display: flex;
             flex-direction: column;
@@ -275,13 +266,13 @@
 
         .landing-textarea {
             width: 100%;
-            max-width: 700px;
-            min-height: 140px;
+            max-width: 720px;
+            min-height: 160px;
             background: rgba(26, 26, 29, 0.6);
             border: 1px solid #2a2a2f;
             border-radius: 16px;
             padding: 24px;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             line-height: 1.6;
             color: #fafafa;
             resize: vertical;
@@ -299,10 +290,10 @@
         }
 
         .action-btn {
-            padding: 12px 32px;
+            padding: 14px 36px;
             border-radius: 14px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
             transition: all 0.2s ease;
             cursor: pointer;
             border: none;
@@ -336,7 +327,6 @@
             transform: translateY(-1px);
         }
 
-        /* Loading spinner for input tab */
         .loading-overlay {
             display: flex;
             flex-direction: column;
@@ -361,7 +351,6 @@
             }
         }
 
-        /* Typewriter cursor */
         .typewriter-cursor::after {
             content: '▊';
             color: #6366f1;
@@ -373,6 +362,60 @@
                 opacity: 0;
             }
         }
+
+        /* RGB bar */
+        .rgb-bar {
+            height: 3px;
+            background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #0000ff, #8800ff, #ff0000);
+            background-size: 200% 100%;
+        }
+
+        .rgb-bar-glow {
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.3), 0 0 12px rgba(0, 255, 0, 0.3), 0 0 12px rgba(0, 0, 255, 0.3);
+        }
+
+        .rgb-bar-animate {
+            animation: rgbSlide 2s linear infinite;
+        }
+
+        @keyframes rgbSlide {
+            from {
+                background-position: 0% 50%;
+            }
+
+            to {
+                background-position: 200% 50%;
+            }
+        }
+
+        /* Generating dots animation */
+        .gen-dots span {
+            animation: dotPulse 1.4s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        .gen-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .gen-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            80%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+
+            40% {
+                opacity: 1;
+                transform: translateY(-4px);
+            }
+        }
     </style>
 </head>
 
@@ -381,7 +424,6 @@
     <!-- Sidebar -->
     <aside id="sidebar"
         class="sidebar h-full border-r border-border flex flex-col bg-surface/40 backdrop-blur-sm shrink-0 z-30">
-        <!-- Top: Logo + Toggle -->
         <div class="flex items-center gap-3 p-4 border-b border-border sidebar-section" style="min-height: 56px;">
             <img src="{{ url_for('static', filename='logo.png') }}" class="w-8 h-8 rounded-lg shadow-lg shrink-0">
             <h1 class="text-lg font-bold tracking-tight sidebar-label whitespace-nowrap overflow-hidden">
@@ -391,8 +433,6 @@
             </h1>
             <button id="sidebar-toggle-btn" class="sidebar-toggle ml-auto" title="Toggle sidebar">«</button>
         </div>
-
-        <!-- Model Selector -->
         <div class="p-4 border-b border-border sidebar-section">
             <label class="block text-xs font-semibold uppercase text-gray-500 tracking-widest mb-2 sidebar-label">Active
                 Network</label>
@@ -401,8 +441,6 @@
                 <option value="">Loading...</option>
             </select>
         </div>
-
-        <!-- Model Info -->
         <div id="model-info"
             class="p-4 flex-1 overflow-y-auto custom-scrollbar space-y-4 font-mono text-xs sidebar-section">
             <div class="animate-pulse space-y-3">
@@ -410,14 +448,11 @@
                 <div class="h-20 bg-surface2 rounded"></div>
             </div>
         </div>
-
-        <!-- Bottom: User Info -->
         <div class="border-t border-border p-4 space-y-3 sidebar-section sidebar-bottom-items">
             <div class="flex items-center gap-2">
                 <div
                     class="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                    {{ username[0] | upper }}
-                </div>
+                    {{ username[0] | upper }}</div>
                 <span class="text-sm text-gray-400 truncate sidebar-label">{{ username }}</span>
             </div>
             <div class="flex gap-3">
@@ -432,7 +467,6 @@
 
     <!-- Main Area -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Tabs -->
         <div class="flex border-b border-border bg-surface/5 px-2 overflow-x-auto no-scrollbar shrink-0">
             <button
                 class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all active whitespace-nowrap"
@@ -456,17 +490,12 @@
                 class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
                 data-tab="inference">💬 Live Chat</button>
         </div>
-
-        <!-- Tab Content -->
         <div id="tab-content" class="flex-1 overflow-y-auto custom-scrollbar relative">
-            <div id="viz-container" class="max-w-6xl mx-auto"></div>
+            <div id="viz-container" class="w-full mx-auto"></div>
         </div>
     </div>
 
     <script>
-        // ═══════════════════════════════════════════
-        //  STATE
-        // ═══════════════════════════════════════════
         let currentModel = null;
         let lastVisData = null;
         let models = [];
@@ -479,16 +508,11 @@
         const sidebarToggle = document.getElementById('sidebar-toggle-btn');
 
         // ═══════════════════════════════════════════
-        //  SIDEBAR COLLAPSE
+        //  SIDEBAR
         // ═══════════════════════════════════════════
         function setSidebarState(collapsed) {
-            if (collapsed) {
-                sidebar.classList.add('collapsed');
-                sidebarToggle.textContent = '»';
-            } else {
-                sidebar.classList.remove('collapsed');
-                sidebarToggle.textContent = '«';
-            }
+            sidebar.classList.toggle('collapsed', collapsed);
+            sidebarToggle.textContent = collapsed ? '»' : '«';
             localStorage.setItem('sidebar-collapsed', collapsed ? '1' : '0');
         }
         sidebarToggle.onclick = () => setSidebarState(!sidebar.classList.contains('collapsed'));
@@ -503,9 +527,7 @@
                 models = await res.json();
                 modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
                 if (models.length > 0) selectModel(models[0].id);
-            } catch (e) {
-                console.error("Init Error:", e);
-            }
+            } catch (e) { console.error("Init Error:", e); }
             renderTab('input');
         }
 
@@ -519,15 +541,12 @@
                         <span>Weights</span><span class="text-right text-gray-300">${currentModel.data_name}</span>
                         <span>Tokenizer</span><span class="text-right text-gray-300">${currentModel.tok_name}</span>
                     </div>
-                </div>
-            `;
+                </div>`;
             const promptEl = document.getElementById('prompt-input');
             if (promptEl) {
-                if (currentModel.data_name.includes('wiki')) {
-                    promptEl.value = "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing ";
-                } else {
-                    promptEl.value = "Harry looked at the mirror and saw";
-                }
+                promptEl.value = currentModel.data_name.includes('wiki')
+                    ? "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing "
+                    : "Harry looked at the mirror and saw";
             }
             updateModelBadge();
             const activeTab = document.querySelector('.tab-btn.active');
@@ -538,7 +557,6 @@
             const badge = document.getElementById('model-badge');
             if (badge && currentModel) badge.textContent = `${currentModel.model_name} · ${currentModel.data_name}`;
         }
-
         modelSelect.onchange = (e) => selectModel(e.target.value);
 
         // ═══════════════════════════════════════════
@@ -560,7 +578,7 @@
         }
 
         // ═══════════════════════════════════════════
-        //  ANALYZE (stays on input, then transitions)
+        //  ANALYZE (stays on input, transitions when done)
         // ═══════════════════════════════════════════
         async function doAnalyze() {
             if (!currentModel) return;
@@ -574,43 +592,39 @@
             if (generateBtn) generateBtn.disabled = true;
             analyzeBtn.textContent = "Analyzing...";
 
-            // Show loading spinner on the input tab itself
             let loadingEl = document.getElementById('input-loading');
             if (!loadingEl) {
                 loadingEl = document.createElement('div');
                 loadingEl.id = 'input-loading';
                 loadingEl.className = 'loading-overlay';
-                loadingEl.innerHTML = '<div class="spinner"></div><span class="text-sm text-gray-400">Capturing tensor activations...</span>';
                 const landing = document.querySelector('.landing-container');
                 if (landing) landing.appendChild(loadingEl);
             }
+            loadingEl.innerHTML = '<div class="spinner"></div><span class="text-sm text-gray-400">Capturing tensor activations...</span>';
             loadingEl.style.display = 'flex';
 
-            // Hide token display during loading
             const tokenDisplay = document.getElementById('token-display');
             if (tokenDisplay) tokenDisplay.classList.add('hidden');
 
             try {
                 const res = await fetch('/api/neonconnect/visualize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ model_id: currentModel.id, prompt: prompt })
                 });
                 if (!res.ok) throw new Error(`Status ${res.status}`);
                 lastVisData = await res.json();
 
-                // Show tokenization on input tab briefly before switching
                 if (tokenDisplay && lastVisData.tokens) {
                     tokenDisplay.classList.remove('hidden');
                     const tokenList = document.getElementById('token-list');
                     if (tokenList) tokenList.innerHTML = lastVisData.tokens.map(t => `<span class="token-item">${cleanT(t)}</span>`).join('');
                 }
+                if (loadingEl) loadingEl.style.display = 'none';
 
-                // Brief pause to show tokens, then switch
-                await new Promise(r => setTimeout(r, 400));
+                await new Promise(r => setTimeout(r, 500));
                 switchToTab('architecture');
             } catch (e) {
-                if (loadingEl) loadingEl.innerHTML = `<div class="text-red-400 text-sm">Error: ${e.message}</div>`;
+                if (loadingEl) loadingEl.innerHTML = `<div class="text-red-400 text-base">Error: ${e.message}</div>`;
             } finally {
                 analyzeBtn.disabled = false;
                 if (generateBtn) generateBtn.disabled = false;
@@ -627,17 +641,12 @@
 
             generateBtn.disabled = true;
             generateBtn.textContent = "Starting...";
-
-            // Switch to Live Chat immediately
             switchToTab('inference');
             await new Promise(r => setTimeout(r, 50));
-
-            // Fill prompt and trigger
             const inp = document.getElementById('chat-input');
             if (inp) inp.value = prompt;
             const send = document.getElementById('chat-send');
             if (send) send.click();
-
             generateBtn.disabled = false;
             generateBtn.textContent = "💬 Generate";
         }
@@ -647,12 +656,12 @@
         // ═══════════════════════════════════════════
         function renderTab(tabId) {
             if (tabId !== 'input') vizContainer.innerHTML = '';
-            vizContainer.className = 'max-w-6xl mx-auto tab-content-fade';
+            vizContainer.className = 'w-full mx-auto tab-content-fade';
 
             if (tabId === 'input') { renderInput(); return; }
             if (tabId === 'architecture') { renderArchitecture(); return; }
             if (!lastVisData && tabId !== 'inference') {
-                vizContainer.innerHTML = `<div class="text-center py-20 text-gray-500"><p class="text-base">No capture data available. Go to Input tab and run Analyze.</p></div>`;
+                vizContainer.innerHTML = `<div class="text-center py-20 text-gray-500"><p class="text-base">No capture data. Go to Input tab and run Analyze.</p></div>`;
                 return;
             }
             if (tabId === 'single-head') renderSingleHead();
@@ -666,7 +675,7 @@
         function getTLabels(tokens) { return (tokens || []).map((t, i) => `${i}:${cleanT(t)}`); }
 
         // ═══════════════════════════════════════════
-        //  INPUT TAB (Landing Page)
+        //  INPUT TAB
         // ═══════════════════════════════════════════
         function renderInput() {
             const defaultPrompt = currentModel
@@ -674,32 +683,26 @@
                     ? "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing "
                     : "Harry looked at the mirror and saw")
                 : "Harry looked at the mirror and saw";
-
             const modelLabel = currentModel ? `${currentModel.model_name} · ${currentModel.data_name}` : 'No model loaded';
 
             vizContainer.innerHTML = `
                 <div class="landing-container">
                     <div id="model-badge" class="model-badge mb-8">${modelLabel}</div>
-
                     <textarea id="prompt-input" rows="5" placeholder="Enter your prompt..."
                         class="landing-textarea custom-scrollbar">${defaultPrompt}</textarea>
-
                     <div class="flex gap-5 mt-8">
                         <button id="analyze-btn" class="action-btn action-btn-primary" onclick="doAnalyze()">🔍 Analyze</button>
                         <button id="generate-btn" class="action-btn action-btn-secondary" onclick="doGenerate()">💬 Generate</button>
                     </div>
-
-                    <!-- Tokenization Display -->
-                    <div id="token-display" class="hidden w-full max-w-[700px] mt-6 px-5 py-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                    <div id="token-display" class="hidden w-full max-w-[720px] mt-6 px-5 py-4 bg-green-500/10 border border-green-500/30 rounded-xl">
                         <h3 class="text-xs font-bold uppercase text-[#00ff00] tracking-widest mb-2 font-mono">Tokenization</h3>
                         <div id="token-list" class="flex flex-wrap gap-1"></div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         // ═══════════════════════════════════════════
-        //  ARCHITECTURE TAB
+        //  ARCHITECTURE
         // ═══════════════════════════════════════════
         function renderArchitecture() {
             const currentModelId = modelSelect.value || "";
@@ -753,74 +756,69 @@ graph LR
     end
     R2 --> F["Final Norm"]
     F --> H["Head"]
-    H --> P["Probs"]
-            `;
+    H --> P["Probs"]`;
 
             let tokenHtml = '';
             if (lastVisData && lastVisData.tokens) {
-                tokenHtml = `
-                    <div class="mt-6 px-5 py-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-                        <h3 class="text-xs font-bold uppercase text-[#00ff00] tracking-widest mb-2 font-mono">Tokenization</h3>
-                        <div class="flex flex-wrap gap-1">${lastVisData.tokens.map(t => `<span class="token-item">${cleanT(t)}</span>`).join('')}</div>
-                    </div>
-                `;
+                tokenHtml = `<div class="mt-6 px-5 py-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                    <h3 class="text-xs font-bold uppercase text-[#00ff00] tracking-widest mb-2 font-mono">Tokenization</h3>
+                    <div class="flex flex-wrap gap-1">${lastVisData.tokens.map(t => `<span class="token-item">${cleanT(t)}</span>`).join('')}</div></div>`;
             }
-
-            vizContainer.innerHTML = `<div class="p-4 md:p-8 space-y-6">${tokenHtml}<div class="mermaid-wrapper"><div class="mermaid">${mermaidCode}</div></div></div>`;
+            vizContainer.innerHTML = `<div class="p-6 md:p-10 space-y-6">${tokenHtml}<div class="mermaid-wrapper"><div class="mermaid">${mermaidCode}</div></div></div>`;
             if (window.mermaid) window.mermaid.contentLoaded();
         }
 
         // ═══════════════════════════════════════════
-        //  HEADS DETAILED TAB
+        //  HEADS DETAILED — Raw(1x4) → Conv(1x4) → Attention
         // ═══════════════════════════════════════════
         function renderSingleHead() {
             const config = lastVisData.config;
             vizContainer.innerHTML = `
-                <div class="space-y-8 pb-12 p-4 md:p-8">
-                    <div class="flex gap-4 items-end bg-surface/40 p-4 rounded-2xl border border-border">
+                <div class="space-y-8 pb-12 p-6 md:p-10">
+                    <div class="flex gap-4 items-end bg-surface/40 p-4 rounded-2xl border border-border max-w-lg">
                         <div class="flex-1">
                             <label class="block text-xs font-semibold uppercase text-gray-500 tracking-widest mb-1">Layer</label>
                             <select id="layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2.5 text-sm appearance-none outline-none">
-                                ${Array.from({ length: config.n_layers }, (_, i) => `<option value="${i}">Layer ${i}</option>`).join('')}
+                                ${Array.from({ length: config.n_layers }, (_, i) => `<option value="${i}">Layer ${i + 1}</option>`).join('')}
                             </select>
                         </div>
                         <div class="flex-1">
                             <label class="block text-xs font-semibold uppercase text-gray-500 tracking-widest mb-1">Head</label>
                             <select id="head-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2.5 text-sm appearance-none outline-none">
-                                ${Array.from({ length: config.n_head }, (_, i) => `<option value="${i}">Head ${i}</option>`).join('')}
+                                ${Array.from({ length: config.n_head }, (_, i) => `<option value="${i}">Head ${i + 1}</option>`).join('')}
                             </select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        <div class="space-y-4">
-                            <h4 class="text-xs font-bold uppercase tracking-widest text-primary">Attention Matrix</h4>
-                            <div id="attn-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden"></div>
-                        </div>
-                        <div class="space-y-4">
-                            <h4 class="text-xs font-bold uppercase tracking-widest text-search">Raw Core Projections (Linear)</h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div id="q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
-                                <div id="k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
-                                <div id="v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
-                                <div id="i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-48"></div>
-                            </div>
-                        </div>
-                        <div class="xl:col-span-2 space-y-4 pt-8 border-t border-border">
-                            <h4 class="text-xs font-bold uppercase tracking-widest text-code">Convolved Projections (DepthWise K=3)</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div id="conv-q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
-                                <div id="conv-k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
-                                <div id="conv-v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
-                                <div id="conv-i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
-                            </div>
-                        </div>
-                        <div class="xl:col-span-2 space-y-4 pt-8 border-t border-border">
-                             <h4 class="text-xs font-bold uppercase tracking-widest text-thought">Gating Vectors</h4>
-                             <div id="intent-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-32"></div>
+
+                    <!-- Raw Projections (1x4) -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-bold uppercase tracking-widest text-search">Raw Core Projections (Linear)</h4>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div id="q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
+                            <div id="k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
+                            <div id="v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
+                            <div id="i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
                         </div>
                     </div>
-                </div>
-            `;
+
+                    <!-- Convolved Projections (1x4) -->
+                    <div class="space-y-4 pt-6 border-t border-border">
+                        <h4 class="text-sm font-bold uppercase tracking-widest text-code">Convolved Projections (DepthWise K=3)</h4>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div id="conv-q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                            <div id="conv-k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                            <div id="conv-v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                            <div id="conv-i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                        </div>
+                    </div>
+
+                    <!-- Attention Matrix -->
+                    <div class="space-y-4 pt-6 border-t border-border">
+                        <h4 class="text-sm font-bold uppercase tracking-widest text-primary">Attention Matrix</h4>
+                        <div id="attn-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden" style="height: 500px;"></div>
+                    </div>
+                </div>`;
+
             const update = () => {
                 const l = parseInt(document.getElementById('layer-sel').value);
                 const h = parseInt(document.getElementById('head-sel').value);
@@ -844,48 +842,51 @@ graph LR
             const plotH = (id, z, title, colorscale = 'RdBu') => {
                 if (!z) return;
                 Plotly.newPlot(id, [{ z, x: Array.from({ length: z[0].length }, (_, i) => `d${i}`), y: tokens, type: 'heatmap', colorscale, zmid: 0, showscale: false }],
-                    { ...baseL, title: { text: title, font: { size: 9, weight: 'bold' } } }, { displayModeBar: false });
+                    { ...baseL, title: { text: title, font: { size: 10, weight: 'bold' } } }, { displayModeBar: false, responsive: true });
             };
-            if (layerData.attn) Plotly.newPlot('attn-plot', [{ z: layerData.attn[0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false }],
-                { ...baseL, title: { text: 'ATTENTION WEIGHTS', font: { size: 9 } } }, { displayModeBar: false });
+
             if (layerData.raw_q) plotH('q-plot', layerData.raw_q[0][head], 'RAW Q');
             if (layerData.raw_k) plotH('k-plot', layerData.raw_k[0][head], 'RAW K');
             if (layerData.raw_v) plotH('v-plot', layerData.raw_v[0][head], 'RAW V');
             if (layerData.raw_i) plotH('i-plot', layerData.raw_i[0][head], 'RAW I');
+
             if (layerData.conv_q) plotH('conv-q-plot', layerData.conv_q[0][head], 'CONV Q');
             if (layerData.conv_k) plotH('conv-k-plot', layerData.conv_k[0][head], 'CONV K');
             if (layerData.conv_v) plotH('conv-v-plot', layerData.conv_v[0][head], 'CONV V');
             if (layerData.conv_i) plotH('conv-i-plot', layerData.conv_i[0][head], 'CONV I', 'Viridis');
-            if (layerData.mlp_gate) {
-                const z = layerData.mlp_gate[0];
-                Plotly.newPlot('intent-plot', [{ z, x: Array.from({ length: z[0].length }, (_, i) => `d${i}`), y: tokens, type: 'heatmap', colorscale: 'Viridis', showscale: false }],
-                    { ...baseL, title: { text: 'MLP GATING VECTOR (σ)', font: { size: 9 } } }, { displayModeBar: false });
+
+            if (layerData.attn) {
+                Plotly.newPlot('attn-plot', [{ z: layerData.attn[0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false }],
+                    {
+                        ...baseL, title: { text: 'ATTENTION WEIGHTS', font: { size: 10 } }, margin: { l: 80, r: 20, b: 60, t: 40 },
+                        xaxis: { ...baseL.xaxis, showticklabels: true, tickangle: 45 }, yaxis: { ...baseL.yaxis, showticklabels: true }
+                    },
+                    { displayModeBar: false, responsive: true });
             }
         }
 
         // ═══════════════════════════════════════════
-        //  GRID TAB
+        //  GRID
         // ═══════════════════════════════════════════
         function renderAllHeads() {
             const nl = lastVisData.config.n_layers, nh = lastVisData.config.n_head;
             vizContainer.innerHTML = `
-                <div class="flex flex-col gap-6 py-4 overflow-x-auto custom-scrollbar p-4 md:p-8">
+                <div class="flex flex-col gap-6 py-4 overflow-x-auto custom-scrollbar p-6 md:p-10">
                     <div class="flex min-w-[800px]">
-                        <div class="w-20 shrink-0"></div>
+                        <div class="w-24 shrink-0"></div>
                         <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
-                            ${Array.from({ length: nh }, (_, i) => `<div class="text-center text-xs font-bold text-gray-500">HEAD ${i}</div>`).join('')}
+                            ${Array.from({ length: nh }, (_, i) => `<div class="text-center text-sm font-bold text-gray-500">Head ${i + 1}</div>`).join('')}
                         </div>
                     </div>
                     ${Array.from({ length: nl }, (_, l) => `
                         <div class="flex items-stretch min-w-[800px]">
-                            <div class="w-20 shrink-0 flex items-center justify-end text-xs font-bold text-gray-500 border-r border-border pr-4 mr-4">LAYER ${l}</div>
+                            <div class="w-24 shrink-0 flex items-center justify-end text-sm font-bold text-gray-500 border-r border-border pr-4 mr-4">Layer ${l + 1}</div>
                             <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
                                 ${Array.from({ length: nh }, (_, h) => `<div id="grid-l${l}-h${h}" class="aspect-square bg-surface/20 border border-border rounded-xl"></div>`).join('')}
                             </div>
                         </div>
                     `).join('')}
-                </div>
-            `;
+                </div>`;
             requestAnimationFrame(() => {
                 for (let l = 0; l < nl; l++) {
                     const layerAttn = lastVisData.layers[l].attn;
@@ -902,30 +903,29 @@ graph LR
         }
 
         // ═══════════════════════════════════════════
-        //  MLP TAB
+        //  MLP
         // ═══════════════════════════════════════════
         function renderMLP() {
             const nl = lastVisData.config.n_layers;
             vizContainer.innerHTML = `
-                <div class="space-y-8 pb-12 p-4 md:p-8">
+                <div class="space-y-8 pb-12 p-6 md:p-10">
                     <div class="bg-surface/40 p-4 rounded-2xl border border-border max-w-xs">
                         <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Block</label>
                         <select id="mlp-layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2.5 text-sm outline-none">
-                            ${Array.from({ length: nl }, (_, i) => `<option value="${i}">Block ${i}</option>`).join('')}
+                            ${Array.from({ length: nl }, (_, i) => `<option value="${i}">Block ${i + 1}</option>`).join('')}
                         </select>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <h4 class="text-xs font-bold uppercase text-primary tracking-widest">Inner Hidden States</h4>
+                            <h4 class="text-sm font-bold uppercase text-primary tracking-widest">Inner Hidden States</h4>
                             <div id="mlp-act-plot" class="plot-container bg-surface/20 rounded-2xl border border-border h-[600px]"></div>
                         </div>
                         <div class="space-y-4">
-                            <h4 class="text-xs font-bold uppercase text-search tracking-widest">Hydra Gate Pattern</h4>
+                            <h4 class="text-sm font-bold uppercase text-search tracking-widest">Hydra Gate Pattern</h4>
                             <div id="mlp-gate-plot" class="plot-container bg-surface/20 rounded-2xl border border-border h-[600px]"></div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             const update = () => plotMLPAct(parseInt(document.getElementById('mlp-layer-sel').value));
             document.getElementById('mlp-layer-sel').onchange = update;
             update();
@@ -952,35 +952,35 @@ graph LR
         }
 
         // ═══════════════════════════════════════════
-        //  PREDICTOR TAB
+        //  PREDICTOR
         // ═══════════════════════════════════════════
         function renderNextToken() {
-            vizContainer.innerHTML = `<div class="p-4 md:p-8"><div class="bg-surface/20 rounded-2xl border border-border p-4 shadow-xl"><div id="probs-plot" class="plot-container" style="height: 600px;"></div></div></div>`;
+            vizContainer.innerHTML = `<div class="p-6 md:p-10"><div class="bg-surface/20 rounded-2xl border border-border p-4 shadow-xl"><div id="probs-plot" class="plot-container" style="height: 600px;"></div></div></div>`;
             Plotly.newPlot('probs-plot', [{
                 x: lastVisData.top_k_probs, y: lastVisData.top_k_tokens.map(t => `"${cleanT(t)}"`),
                 type: 'bar', orientation: 'h', marker: { color: '#6366f1' }
             }], {
-                title: { text: 'NEXT TOKEN PROBABILITIES', font: { size: 12, color: '#a1a1aa', weight: 'bold' } },
+                title: { text: 'NEXT TOKEN PROBABILITIES', font: { size: 13, color: '#a1a1aa', weight: 'bold' } },
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#71717a', size: 10, family: 'JetBrains Mono' },
+                font: { color: '#71717a', size: 11, family: 'JetBrains Mono' },
                 xaxis: { gridcolor: '#27272a', title: 'Probability' }, yaxis: { autorange: 'reversed' },
                 margin: { l: 150, r: 50, b: 50, t: 80 }
             });
         }
 
         // ═══════════════════════════════════════════
-        //  LIVE CHAT TAB (with simulated streaming)
+        //  LIVE CHAT (with token-by-token simulated streaming)
         // ═══════════════════════════════════════════
         function renderInference() {
             vizContainer.innerHTML = `
-                <div class="max-w-2xl mx-auto space-y-6 py-6 p-4 md:p-8">
+                <div class="max-w-3xl mx-auto space-y-6 py-6 p-6 md:p-10">
                     <div class="bg-[#111] p-8 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden">
-                        <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(to right, #ff0000, #00ff00, #0000ff);"></div>
-                        <h3 class="text-xl font-bold mb-6 flex items-center justify-between">
+                        <div id="rgb-bar" class="rgb-bar rgb-bar-glow absolute top-0 left-0 right-0"></div>
+                        <h3 class="text-xl font-bold mb-6 flex items-center justify-between mt-2">
                             <div class="flex items-center gap-3"><span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span> Live Inference</div>
                             <button id="clear-console" class="text-xs font-bold text-gray-500 hover:text-red-400 uppercase tracking-widest">Clear</button>
                         </h3>
-                        <div id="chat-output" class="min-h-[200px] bg-background/50 rounded-2xl p-6 mb-6 font-light whitespace-pre-wrap text-gray-300 border border-border/50 text-base shadow-inner overflow-y-auto custom-scrollbar max-h-96">Ready...</div>
+                        <div id="chat-output" class="min-h-[220px] bg-background/50 rounded-2xl p-6 mb-6 whitespace-pre-wrap text-gray-300 border border-border/50 text-base shadow-inner overflow-y-auto custom-scrollbar max-h-[400px]" style="line-height:1.7;">Ready...</div>
                         <div class="grid grid-cols-3 gap-4 mb-6">
                             <div><label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Temp</label><input id="temp-range" type="range" min="0.1" max="2.0" step="0.1" value="1.0" class="w-full"><div class="text-xs font-mono mt-1 text-gray-400"><span id="temp-val">1.0</span></div></div>
                             <div><label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Tokens</label><input id="tokens-range" type="range" min="10" max="500" step="10" value="150" class="w-full"><div class="text-xs font-mono mt-1 text-gray-400"><span id="tokens-val">150</span></div></div>
@@ -991,20 +991,25 @@ graph LR
                             <button id="chat-send" class="px-7 py-3.5 bg-primary hover:bg-primary/80 text-white rounded-xl font-bold text-base transition-all shadow-lg shadow-primary/20">Generate</button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
+
             const out = document.getElementById('chat-output');
             const inp = document.getElementById('chat-input');
             const send = document.getElementById('chat-send');
             const clear = document.getElementById('clear-console');
+            const rgbBar = document.getElementById('rgb-bar');
             const tr = document.getElementById('temp-range'); const tv = document.getElementById('temp-val'); tr.oninput = () => tv.textContent = tr.value;
             const lr = document.getElementById('tokens-range'); const lv = document.getElementById('tokens-val'); lr.oninput = () => lv.textContent = lr.value;
             const kr = document.getElementById('topk-range'); const kv = document.getElementById('topk-val'); kr.oninput = () => kv.textContent = kr.value;
-            clear.onclick = () => out.innerHTML = "Ready...";
+            clear.onclick = () => { out.innerHTML = "Ready..."; rgbBar.classList.remove('rgb-bar-animate'); };
 
             send.onclick = async () => {
                 const p = inp.value; if (!p) return;
-                send.disabled = true; out.innerHTML = '<span class="text-gray-500">Generating...</span>';
+                send.disabled = true;
+                // Animated "Generating" with bouncing dots
+                rgbBar.classList.add('rgb-bar-animate');
+                out.innerHTML = '<span class="text-gray-500">Generating<span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></span>';
+
                 try {
                     const res = await fetch('/api/neonconnect/generate', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1012,37 +1017,39 @@ graph LR
                     });
                     const data = await res.json();
                     if (data.prompt && data.completion) {
-                        // Simulated streaming: show prompt immediately, then typewrite completion
+                        // Token-by-token simulated streaming
                         out.innerHTML = `<span class="prompt-text">${data.prompt}</span><span id="stream-target" class="gen-text typewriter-cursor"></span>`;
                         const target = document.getElementById('stream-target');
-                        const chars = data.completion;
+                        // Split by spaces to simulate token-by-token
+                        const rawTokens = data.completion.match(/\S+\s*/g) || [data.completion];
                         let i = 0;
-                        const speed = Math.max(8, Math.min(30, 3000 / chars.length)); // adaptive speed
-                        function typeNext() {
-                            if (i < chars.length) {
-                                target.textContent += chars[i];
+                        const speed = Math.max(20, Math.min(60, 4000 / rawTokens.length));
+                        function typeNextToken() {
+                            if (i < rawTokens.length) {
+                                target.textContent += rawTokens[i];
                                 i++;
-                                // Auto-scroll
                                 out.scrollTop = out.scrollHeight;
-                                setTimeout(typeNext, speed);
+                                setTimeout(typeNextToken, speed);
                             } else {
-                                // Done - remove cursor
                                 target.classList.remove('typewriter-cursor');
+                                rgbBar.classList.remove('rgb-bar-animate');
                             }
                         }
-                        typeNext();
+                        typeNextToken();
                     } else if (data.result) {
                         out.textContent = data.result;
+                        rgbBar.classList.remove('rgb-bar-animate');
                     } else if (data.error) {
                         out.textContent = "Error: " + data.error;
+                        rgbBar.classList.remove('rgb-bar-animate');
                     }
-                } catch (e) { out.textContent = "Error: " + e.message; }
-                finally { send.disabled = false; }
+                } catch (e) {
+                    out.textContent = "Error: " + e.message;
+                    rgbBar.classList.remove('rgb-bar-animate');
+                } finally { send.disabled = false; }
             };
         }
 
-        // ═══════════════════════════════════════════
-        //  BOOT
         // ═══════════════════════════════════════════
         init();
     </script>
