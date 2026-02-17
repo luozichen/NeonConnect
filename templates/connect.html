@@ -34,7 +34,7 @@
                         background: '#0a0a0b',
                         surface: '#1a1a1d',
                         surface2: '#252529',
-                        primary: '#6366f1',
+                        primary: '#00ff66',
                         border: '#2a2a2f',
                         thought: '#FF00FF',
                         search: '#00FFFF',
@@ -49,6 +49,10 @@
             --sidebar-width: 280px;
             --sidebar-collapsed: 56px;
             --transition-speed: 220ms;
+            --primary: #00ff66;
+            --primary-dim: rgba(0, 255, 102, 0.15);
+            --primary-border: rgba(0, 255, 102, 0.3);
+            --primary-glow: rgba(0, 255, 102, 0.4);
         }
 
         * {
@@ -62,7 +66,7 @@
         }
 
         body {
-            background: radial-gradient(ellipse at 50% 40%, #12121a 0%, #0a0a0b 70%);
+            background: radial-gradient(ellipse at 50% 40%, #0a1a10 0%, #0a0a0b 70%);
             color: #fafafa;
             min-height: 100vh;
         }
@@ -135,11 +139,11 @@
         .tab-btn {
             position: relative;
             transition: color 0.2s ease;
-            font-size: 0.8rem;
+            font-size: 1rem;
         }
 
         .tab-btn.active {
-            color: #6366f1;
+            color: var(--primary);
         }
 
         .tab-btn.active::after {
@@ -149,8 +153,8 @@
             left: 8px;
             right: 8px;
             height: 2px;
-            background: #6366f1;
-            box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary-glow);
             border-radius: 2px;
         }
 
@@ -191,30 +195,30 @@
         }
 
         input[type="range"] {
-            accent-color: #6366f1;
+            accent-color: var(--primary);
         }
 
         .token-item {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 4px 12px;
             margin: 2px;
             border-radius: 6px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            background: rgba(0, 255, 0, 0.05);
-            border: 1px solid rgba(0, 255, 0, 0.2);
-            color: #00ff00;
+            font-size: 0.95rem;
+            background: rgba(0, 255, 102, 0.05);
+            border: 1px solid rgba(0, 255, 102, 0.2);
+            color: #00ff66;
         }
 
         .token-item:hover {
-            background: rgba(0, 255, 0, 0.2);
-            border-color: #00ff00;
-            box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+            background: rgba(0, 255, 102, 0.2);
+            border-color: #00ff66;
+            box-shadow: 0 0 8px var(--primary-glow);
         }
 
         .prompt-text {
-            color: #00ff00;
-            text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+            color: #00ff66;
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.3);
         }
 
         .gen-text {
@@ -222,14 +226,14 @@
         }
 
         .sidebar-toggle {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
             color: #71717a;
@@ -246,13 +250,13 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 20px;
+            padding: 10px 24px;
             border-radius: 999px;
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.25);
+            background: var(--primary-dim);
+            border: 1px solid var(--primary-border);
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #a5b4fc;
+            font-size: 1rem;
+            color: #88ffaa;
         }
 
         .landing-container {
@@ -266,13 +270,13 @@
 
         .landing-textarea {
             width: 100%;
-            max-width: 720px;
-            min-height: 160px;
+            max-width: 740px;
+            min-height: 170px;
             background: rgba(26, 26, 29, 0.6);
             border: 1px solid #2a2a2f;
             border-radius: 16px;
             padding: 24px;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             line-height: 1.6;
             color: #fafafa;
             resize: vertical;
@@ -281,8 +285,8 @@
         }
 
         .landing-textarea:focus {
-            border-color: rgba(99, 102, 241, 0.5);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            border-color: var(--primary-border);
+            box-shadow: 0 0 0 4px rgba(0, 255, 102, 0.08);
         }
 
         .landing-textarea::placeholder {
@@ -290,10 +294,10 @@
         }
 
         .action-btn {
-            padding: 14px 36px;
+            padding: 14px 38px;
             border-radius: 14px;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.1rem;
             transition: all 0.2s ease;
             cursor: pointer;
             border: none;
@@ -305,15 +309,16 @@
         }
 
         .action-btn-primary {
-            background: #6366f1;
-            color: white;
-            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+            background: var(--primary);
+            color: #0a0a0b;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(0, 255, 102, 0.2);
         }
 
         .action-btn-primary:hover:not(:disabled) {
-            background: #5558e6;
+            background: #33ff88;
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 6px 24px rgba(0, 255, 102, 0.3);
         }
 
         .action-btn-secondary {
@@ -337,10 +342,10 @@
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(99, 102, 241, 0.2);
-            border-top-color: #6366f1;
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(0, 255, 102, 0.15);
+            border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -353,7 +358,7 @@
 
         .typewriter-cursor::after {
             content: '▊';
-            color: #6366f1;
+            color: var(--primary);
             animation: blink 0.8s step-end infinite;
         }
 
@@ -366,12 +371,12 @@
         /* RGB bar */
         .rgb-bar {
             height: 3px;
-            background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #0000ff, #8800ff, #ff0000);
+            background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff66, #0088ff, #0000ff, #8800ff, #ff0000);
             background-size: 200% 100%;
         }
 
         .rgb-bar-glow {
-            box-shadow: 0 0 12px rgba(255, 0, 0, 0.3), 0 0 12px rgba(0, 255, 0, 0.3), 0 0 12px rgba(0, 0, 255, 0.3);
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.3), 0 0 12px rgba(0, 255, 102, 0.3), 0 0 12px rgba(0, 0, 255, 0.3);
         }
 
         .rgb-bar-animate {
@@ -388,7 +393,6 @@
             }
         }
 
-        /* Generating dots animation */
         .gen-dots span {
             animation: dotPulse 1.4s ease-in-out infinite;
             display: inline-block;
@@ -416,6 +420,14 @@
                 transform: translateY(-4px);
             }
         }
+
+        /* Section headers */
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
     </style>
 </head>
 
@@ -426,7 +438,7 @@
         class="sidebar h-full border-r border-border flex flex-col bg-surface/40 backdrop-blur-sm shrink-0 z-30">
         <div class="flex items-center gap-3 p-4 border-b border-border sidebar-section" style="min-height: 56px;">
             <img src="{{ url_for('static', filename='logo.png') }}" class="w-8 h-8 rounded-lg shadow-lg shrink-0">
-            <h1 class="text-lg font-bold tracking-tight sidebar-label whitespace-nowrap overflow-hidden">
+            <h1 class="text-xl font-bold tracking-tight sidebar-label whitespace-nowrap overflow-hidden">
                 <span class="text-code">N</span><span class="text-thought">e</span><span
                     class="text-primary">o</span><span class="text-search">n</span>
                 <span class="text-gray-400 text-sm">CONNECT</span>
@@ -434,15 +446,15 @@
             <button id="sidebar-toggle-btn" class="sidebar-toggle ml-auto" title="Toggle sidebar">«</button>
         </div>
         <div class="p-4 border-b border-border sidebar-section">
-            <label class="block text-xs font-semibold uppercase text-gray-500 tracking-widest mb-2 sidebar-label">Active
+            <label class="block text-sm font-semibold uppercase text-gray-500 tracking-widest mb-2 sidebar-label">Active
                 Network</label>
             <select id="model-select"
-                class="w-full bg-surface border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
+                class="w-full bg-surface border border-border rounded-lg px-3 py-3 text-base focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer hover:bg-surface2 transition-colors">
                 <option value="">Loading...</option>
             </select>
         </div>
         <div id="model-info"
-            class="p-4 flex-1 overflow-y-auto custom-scrollbar space-y-4 font-mono text-xs sidebar-section">
+            class="p-4 flex-1 overflow-y-auto custom-scrollbar space-y-4 font-mono text-sm sidebar-section">
             <div class="animate-pulse space-y-3">
                 <div class="h-4 bg-surface2 rounded w-3/4"></div>
                 <div class="h-20 bg-surface2 rounded"></div>
@@ -451,16 +463,16 @@
         <div class="border-t border-border p-4 space-y-3 sidebar-section sidebar-bottom-items">
             <div class="flex items-center gap-2">
                 <div
-                    class="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                    class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
                     {{ username[0] | upper }}</div>
-                <span class="text-sm text-gray-400 truncate sidebar-label">{{ username }}</span>
+                <span class="text-base text-gray-400 truncate sidebar-label">{{ username }}</span>
             </div>
             <div class="flex gap-3">
                 <a href="/neoncore"
-                    class="text-xs font-semibold text-gray-500 hover:text-primary uppercase tracking-wider transition-colors sidebar-label">Legacy</a>
+                    class="text-sm font-semibold text-gray-500 hover:text-primary uppercase tracking-wider transition-colors sidebar-label">Legacy</a>
                 <span class="text-gray-600 sidebar-label">·</span>
                 <a href="/logout"
-                    class="text-xs font-semibold text-red-500/70 hover:text-red-400 uppercase tracking-wider transition-colors sidebar-label">Logout</a>
+                    class="text-sm font-semibold text-red-500/70 hover:text-red-400 uppercase tracking-wider transition-colors sidebar-label">Logout</a>
             </div>
         </div>
     </aside>
@@ -469,25 +481,25 @@
     <div class="flex-1 flex flex-col overflow-hidden">
         <div class="flex border-b border-border bg-surface/5 px-2 overflow-x-auto no-scrollbar shrink-0">
             <button
-                class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all active whitespace-nowrap"
+                class="tab-btn px-5 py-4 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all active whitespace-nowrap"
                 data-tab="input">🎯 Input</button>
             <button
-                class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                class="tab-btn px-5 py-4 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
                 data-tab="architecture">🏗️ Structure</button>
             <button
-                class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                class="tab-btn px-5 py-4 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
                 data-tab="single-head">🧠 Heads</button>
             <button
-                class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                class="tab-btn px-5 py-4 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
                 data-tab="all-heads">🔲 Grid</button>
             <button
-                class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                class="tab-btn px-5 py-4 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
                 data-tab="mlp-acts">⚡ MLP</button>
             <button
-                class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                class="tab-btn px-5 py-4 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
                 data-tab="next-token">📊 Predictor</button>
             <button
-                class="tab-btn px-5 py-3.5 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
+                class="tab-btn px-5 py-4 font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-all whitespace-nowrap"
                 data-tab="inference">💬 Live Chat</button>
         </div>
         <div id="tab-content" class="flex-1 overflow-y-auto custom-scrollbar relative">
@@ -507,9 +519,7 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebar-toggle-btn');
 
-        // ═══════════════════════════════════════════
-        //  SIDEBAR
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ SIDEBAR ═══════════════════════
         function setSidebarState(collapsed) {
             sidebar.classList.toggle('collapsed', collapsed);
             sidebarToggle.textContent = collapsed ? '»' : '«';
@@ -518,9 +528,7 @@
         sidebarToggle.onclick = () => setSidebarState(!sidebar.classList.contains('collapsed'));
         if (localStorage.getItem('sidebar-collapsed') === '1') setSidebarState(true);
 
-        // ═══════════════════════════════════════════
-        //  INIT
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ INIT ═══════════════════════
         async function init() {
             try {
                 const res = await fetch('/api/neonconnect/models');
@@ -536,8 +544,8 @@
             if (!currentModel) return;
             modelInfo.innerHTML = `
                 <div class="space-y-4">
-                    <p class="text-primary font-bold text-sm">NETWORK: ${currentModel.model_name}</p>
-                    <div class="grid grid-cols-2 gap-2 text-gray-500 uppercase tracking-tighter text-xs">
+                    <p class="text-primary font-bold text-base">NETWORK: ${currentModel.model_name}</p>
+                    <div class="grid grid-cols-2 gap-2 text-gray-500 uppercase tracking-tighter text-sm">
                         <span>Weights</span><span class="text-right text-gray-300">${currentModel.data_name}</span>
                         <span>Tokenizer</span><span class="text-right text-gray-300">${currentModel.tok_name}</span>
                     </div>
@@ -559,9 +567,7 @@
         }
         modelSelect.onchange = (e) => selectModel(e.target.value);
 
-        // ═══════════════════════════════════════════
-        //  TABS
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ TABS ═══════════════════════
         tabBtns.forEach(btn => {
             btn.onclick = () => {
                 tabBtns.forEach(b => b.classList.remove('active'));
@@ -569,7 +575,6 @@
                 renderTab(btn.dataset.tab);
             };
         });
-
         function switchToTab(tabId) {
             tabBtns.forEach(b => b.classList.remove('active'));
             const target = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
@@ -577,16 +582,13 @@
             renderTab(tabId);
         }
 
-        // ═══════════════════════════════════════════
-        //  ANALYZE (stays on input, transitions when done)
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ ANALYZE ═══════════════════════
         async function doAnalyze() {
             if (!currentModel) return;
             const promptEl = document.getElementById('prompt-input');
             const analyzeBtn = document.getElementById('analyze-btn');
             const generateBtn = document.getElementById('generate-btn');
             if (!promptEl || !analyzeBtn) return;
-            const prompt = promptEl.value;
 
             analyzeBtn.disabled = true;
             if (generateBtn) generateBtn.disabled = true;
@@ -600,7 +602,7 @@
                 const landing = document.querySelector('.landing-container');
                 if (landing) landing.appendChild(loadingEl);
             }
-            loadingEl.innerHTML = '<div class="spinner"></div><span class="text-sm text-gray-400">Capturing tensor activations...</span>';
+            loadingEl.innerHTML = '<div class="spinner"></div><span class="text-base text-gray-400">Capturing tensor activations...</span>';
             loadingEl.style.display = 'flex';
 
             const tokenDisplay = document.getElementById('token-display');
@@ -609,7 +611,7 @@
             try {
                 const res = await fetch('/api/neonconnect/visualize', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model_id: currentModel.id, prompt: prompt })
+                    body: JSON.stringify({ model_id: currentModel.id, prompt: promptEl.value })
                 });
                 if (!res.ok) throw new Error(`Status ${res.status}`);
                 lastVisData = await res.json();
@@ -620,7 +622,6 @@
                     if (tokenList) tokenList.innerHTML = lastVisData.tokens.map(t => `<span class="token-item">${cleanT(t)}</span>`).join('');
                 }
                 if (loadingEl) loadingEl.style.display = 'none';
-
                 await new Promise(r => setTimeout(r, 500));
                 switchToTab('architecture');
             } catch (e) {
@@ -637,31 +638,27 @@
             const promptEl = document.getElementById('prompt-input');
             const generateBtn = document.getElementById('generate-btn');
             if (!promptEl || !generateBtn) return;
-            const prompt = promptEl.value;
-
             generateBtn.disabled = true;
             generateBtn.textContent = "Starting...";
             switchToTab('inference');
             await new Promise(r => setTimeout(r, 50));
             const inp = document.getElementById('chat-input');
-            if (inp) inp.value = prompt;
+            if (inp) inp.value = promptEl.value;
             const send = document.getElementById('chat-send');
             if (send) send.click();
             generateBtn.disabled = false;
             generateBtn.textContent = "💬 Generate";
         }
 
-        // ═══════════════════════════════════════════
-        //  TAB RENDERER
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ TAB RENDERER ═══════════════════════
         function renderTab(tabId) {
             if (tabId !== 'input') vizContainer.innerHTML = '';
             vizContainer.className = 'w-full mx-auto tab-content-fade';
 
-            if (tabId === 'input') { renderInput(); return; }
-            if (tabId === 'architecture') { renderArchitecture(); return; }
+            if (tabId === 'input') return renderInput();
+            if (tabId === 'architecture') return renderArchitecture();
             if (!lastVisData && tabId !== 'inference') {
-                vizContainer.innerHTML = `<div class="text-center py-20 text-gray-500"><p class="text-base">No capture data. Go to Input tab and run Analyze.</p></div>`;
+                vizContainer.innerHTML = `<div class="text-center py-20 text-gray-500"><p class="text-lg">No capture data. Go to Input tab and run Analyze.</p></div>`;
                 return;
             }
             if (tabId === 'single-head') renderSingleHead();
@@ -674,9 +671,7 @@
         function cleanT(t) { return (t || "").replace('Ġ', '·').replace('Ċ', '↵').replace('▁', '·'); }
         function getTLabels(tokens) { return (tokens || []).map((t, i) => `${i}:${cleanT(t)}`); }
 
-        // ═══════════════════════════════════════════
-        //  INPUT TAB
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ INPUT TAB ═══════════════════════
         function renderInput() {
             const defaultPrompt = currentModel
                 ? (currentModel.data_name.includes('wiki')
@@ -694,16 +689,14 @@
                         <button id="analyze-btn" class="action-btn action-btn-primary" onclick="doAnalyze()">🔍 Analyze</button>
                         <button id="generate-btn" class="action-btn action-btn-secondary" onclick="doGenerate()">💬 Generate</button>
                     </div>
-                    <div id="token-display" class="hidden w-full max-w-[720px] mt-6 px-5 py-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-                        <h3 class="text-xs font-bold uppercase text-[#00ff00] tracking-widest mb-2 font-mono">Tokenization</h3>
+                    <div id="token-display" class="hidden w-full max-w-[740px] mt-6 px-5 py-4 bg-primary/5 border border-primary/20 rounded-xl">
+                        <h3 class="text-sm font-bold uppercase text-primary tracking-widest mb-2 font-mono">Tokenization</h3>
                         <div id="token-list" class="flex flex-wrap gap-1"></div>
                     </div>
                 </div>`;
         }
 
-        // ═══════════════════════════════════════════
-        //  ARCHITECTURE
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ ARCHITECTURE ═══════════════════════
         function renderArchitecture() {
             const currentModelId = modelSelect.value || "";
             let attnGateLabel = "Intent Gating (⊙ σ(I))";
@@ -760,31 +753,29 @@ graph LR
 
             let tokenHtml = '';
             if (lastVisData && lastVisData.tokens) {
-                tokenHtml = `<div class="mt-6 px-5 py-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-                    <h3 class="text-xs font-bold uppercase text-[#00ff00] tracking-widest mb-2 font-mono">Tokenization</h3>
+                tokenHtml = `<div class="mt-6 px-5 py-4 bg-primary/5 border border-primary/20 rounded-xl">
+                    <h3 class="text-sm font-bold uppercase text-primary tracking-widest mb-2 font-mono">Tokenization</h3>
                     <div class="flex flex-wrap gap-1">${lastVisData.tokens.map(t => `<span class="token-item">${cleanT(t)}</span>`).join('')}</div></div>`;
             }
             vizContainer.innerHTML = `<div class="p-6 md:p-10 space-y-6">${tokenHtml}<div class="mermaid-wrapper"><div class="mermaid">${mermaidCode}</div></div></div>`;
             if (window.mermaid) window.mermaid.contentLoaded();
         }
 
-        // ═══════════════════════════════════════════
-        //  HEADS DETAILED — Raw(1x4) → Conv(1x4) → Attention
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ HEADS DETAILED ═══════════════════════
         function renderSingleHead() {
             const config = lastVisData.config;
             vizContainer.innerHTML = `
-                <div class="space-y-8 pb-12 p-6 md:p-10">
-                    <div class="flex gap-4 items-end bg-surface/40 p-4 rounded-2xl border border-border max-w-lg">
+                <div class="space-y-10 pb-12 p-6 md:p-10">
+                    <div class="flex gap-4 items-end bg-surface/40 p-5 rounded-2xl border border-border max-w-lg">
                         <div class="flex-1">
-                            <label class="block text-xs font-semibold uppercase text-gray-500 tracking-widest mb-1">Layer</label>
-                            <select id="layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2.5 text-sm appearance-none outline-none">
+                            <label class="block text-sm font-semibold uppercase text-gray-500 tracking-widest mb-1">Layer</label>
+                            <select id="layer-sel" class="w-full bg-surface border border-border rounded-lg px-4 py-3 text-base appearance-none outline-none">
                                 ${Array.from({ length: config.n_layers }, (_, i) => `<option value="${i}">Layer ${i + 1}</option>`).join('')}
                             </select>
                         </div>
                         <div class="flex-1">
-                            <label class="block text-xs font-semibold uppercase text-gray-500 tracking-widest mb-1">Head</label>
-                            <select id="head-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2.5 text-sm appearance-none outline-none">
+                            <label class="block text-sm font-semibold uppercase text-gray-500 tracking-widest mb-1">Head</label>
+                            <select id="head-sel" class="w-full bg-surface border border-border rounded-lg px-4 py-3 text-base appearance-none outline-none">
                                 ${Array.from({ length: config.n_head }, (_, i) => `<option value="${i}">Head ${i + 1}</option>`).join('')}
                             </select>
                         </div>
@@ -792,37 +783,35 @@ graph LR
 
                     <!-- Raw Projections (1x4) -->
                     <div class="space-y-4">
-                        <h4 class="text-sm font-bold uppercase tracking-widest text-search">Raw Core Projections (Linear)</h4>
+                        <h4 class="section-title text-search">Raw Core Projections (Linear)</h4>
                         <div class="grid grid-cols-4 gap-4">
-                            <div id="q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
-                            <div id="k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
-                            <div id="v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
-                            <div id="i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-56"></div>
+                            <div id="q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                            <div id="k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                            <div id="v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                            <div id="i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
                         </div>
                     </div>
 
                     <!-- Convolved Projections (1x4) -->
                     <div class="space-y-4 pt-6 border-t border-border">
-                        <h4 class="text-sm font-bold uppercase tracking-widest text-code">Convolved Projections (DepthWise K=3)</h4>
+                        <h4 class="section-title text-code">Convolved Projections (DepthWise K=3)</h4>
                         <div class="grid grid-cols-4 gap-4">
-                            <div id="conv-q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
-                            <div id="conv-k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
-                            <div id="conv-v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
-                            <div id="conv-i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-64"></div>
+                            <div id="conv-q-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-72"></div>
+                            <div id="conv-k-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-72"></div>
+                            <div id="conv-v-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-72"></div>
+                            <div id="conv-i-plot" class="plot-container bg-surface/20 rounded-xl border border-border h-72"></div>
                         </div>
                     </div>
 
                     <!-- Attention Matrix -->
                     <div class="space-y-4 pt-6 border-t border-border">
-                        <h4 class="text-sm font-bold uppercase tracking-widest text-primary">Attention Matrix</h4>
-                        <div id="attn-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden" style="height: 500px;"></div>
+                        <h4 class="section-title text-primary">Attention Matrix</h4>
+                        <div id="attn-plot" class="plot-container bg-surface/20 rounded-2xl border border-border overflow-hidden" style="height: 550px;"></div>
                     </div>
                 </div>`;
 
             const update = () => {
-                const l = parseInt(document.getElementById('layer-sel').value);
-                const h = parseInt(document.getElementById('head-sel').value);
-                plotSingleHeadDetailed(l, h);
+                plotSingleHeadDetailed(parseInt(document.getElementById('layer-sel').value), parseInt(document.getElementById('head-sel').value));
             };
             document.getElementById('layer-sel').onchange = update;
             document.getElementById('head-sel').onchange = update;
@@ -834,15 +823,15 @@ graph LR
             const layerData = lastVisData.layers[layer];
             const baseL = {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#71717a', size: 9, family: 'JetBrains Mono' },
+                font: { color: '#71717a', size: 10, family: 'JetBrains Mono' },
                 xaxis: { showticklabels: false, gridcolor: '#27272a' },
                 yaxis: { autorange: 'reversed', showticklabels: false, gridcolor: '#27272a' },
-                margin: { l: 10, r: 10, b: 10, t: 30 }, hovermode: 'closest'
+                margin: { l: 10, r: 10, b: 10, t: 35 }, hovermode: 'closest'
             };
-            const plotH = (id, z, title, colorscale = 'RdBu') => {
+            const plotH = (id, z, title) => {
                 if (!z) return;
-                Plotly.newPlot(id, [{ z, x: Array.from({ length: z[0].length }, (_, i) => `d${i}`), y: tokens, type: 'heatmap', colorscale, zmid: 0, showscale: false }],
-                    { ...baseL, title: { text: title, font: { size: 10, weight: 'bold' } } }, { displayModeBar: false, responsive: true });
+                Plotly.newPlot(id, [{ z, x: Array.from({ length: z[0].length }, (_, i) => `d${i}`), y: tokens, type: 'heatmap', colorscale: 'RdBu', zmid: 0, showscale: false }],
+                    { ...baseL, title: { text: title, font: { size: 11, weight: 'bold' } } }, { displayModeBar: false, responsive: true });
             };
 
             if (layerData.raw_q) plotH('q-plot', layerData.raw_q[0][head], 'RAW Q');
@@ -853,21 +842,19 @@ graph LR
             if (layerData.conv_q) plotH('conv-q-plot', layerData.conv_q[0][head], 'CONV Q');
             if (layerData.conv_k) plotH('conv-k-plot', layerData.conv_k[0][head], 'CONV K');
             if (layerData.conv_v) plotH('conv-v-plot', layerData.conv_v[0][head], 'CONV V');
-            if (layerData.conv_i) plotH('conv-i-plot', layerData.conv_i[0][head], 'CONV I', 'Viridis');
+            if (layerData.conv_i) plotH('conv-i-plot', layerData.conv_i[0][head], 'CONV I');
 
             if (layerData.attn) {
                 Plotly.newPlot('attn-plot', [{ z: layerData.attn[0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false }],
                     {
-                        ...baseL, title: { text: 'ATTENTION WEIGHTS', font: { size: 10 } }, margin: { l: 80, r: 20, b: 60, t: 40 },
+                        ...baseL, title: { text: 'ATTENTION WEIGHTS', font: { size: 11 } }, margin: { l: 80, r: 20, b: 60, t: 40 },
                         xaxis: { ...baseL.xaxis, showticklabels: true, tickangle: 45 }, yaxis: { ...baseL.yaxis, showticklabels: true }
                     },
                     { displayModeBar: false, responsive: true });
             }
         }
 
-        // ═══════════════════════════════════════════
-        //  GRID
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ GRID ═══════════════════════
         function renderAllHeads() {
             const nl = lastVisData.config.n_layers, nh = lastVisData.config.n_head;
             vizContainer.innerHTML = `
@@ -902,26 +889,24 @@ graph LR
             });
         }
 
-        // ═══════════════════════════════════════════
-        //  MLP
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ MLP ═══════════════════════
         function renderMLP() {
             const nl = lastVisData.config.n_layers;
             vizContainer.innerHTML = `
                 <div class="space-y-8 pb-12 p-6 md:p-10">
-                    <div class="bg-surface/40 p-4 rounded-2xl border border-border max-w-xs">
-                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Block</label>
-                        <select id="mlp-layer-sel" class="w-full bg-surface border border-border rounded-lg px-3 py-2.5 text-sm outline-none">
+                    <div class="bg-surface/40 p-5 rounded-2xl border border-border max-w-xs">
+                        <label class="block text-sm font-semibold uppercase text-gray-500 mb-1">Block</label>
+                        <select id="mlp-layer-sel" class="w-full bg-surface border border-border rounded-lg px-4 py-3 text-base outline-none">
                             ${Array.from({ length: nl }, (_, i) => `<option value="${i}">Block ${i + 1}</option>`).join('')}
                         </select>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="space-y-4">
-                            <h4 class="text-sm font-bold uppercase text-primary tracking-widest">Inner Hidden States</h4>
+                            <h4 class="section-title text-primary">Inner Hidden States</h4>
                             <div id="mlp-act-plot" class="plot-container bg-surface/20 rounded-2xl border border-border h-[600px]"></div>
                         </div>
                         <div class="space-y-4">
-                            <h4 class="text-sm font-bold uppercase text-search tracking-widest">Hydra Gate Pattern</h4>
+                            <h4 class="section-title text-search">Hydra Gate Pattern</h4>
                             <div id="mlp-gate-plot" class="plot-container bg-surface/20 rounded-2xl border border-border h-[600px]"></div>
                         </div>
                     </div>
@@ -938,7 +923,7 @@ graph LR
             const z = data[0].map((_, colIndex) => data.map(row => row[colIndex]));
             const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: '#71717a', size: 9, family: 'JetBrains Mono' },
+                font: { color: '#71717a', size: 10, family: 'JetBrains Mono' },
                 xaxis: { tickangle: 45, automargin: true, gridcolor: '#27272a' },
                 yaxis: { automargin: true, showticklabels: false, gridcolor: '#27272a' },
                 margin: { l: 50, r: 20, b: 50, t: 30 }
@@ -951,16 +936,14 @@ graph LR
             }
         }
 
-        // ═══════════════════════════════════════════
-        //  PREDICTOR
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ PREDICTOR ═══════════════════════
         function renderNextToken() {
             vizContainer.innerHTML = `<div class="p-6 md:p-10"><div class="bg-surface/20 rounded-2xl border border-border p-4 shadow-xl"><div id="probs-plot" class="plot-container" style="height: 600px;"></div></div></div>`;
             Plotly.newPlot('probs-plot', [{
                 x: lastVisData.top_k_probs, y: lastVisData.top_k_tokens.map(t => `"${cleanT(t)}"`),
-                type: 'bar', orientation: 'h', marker: { color: '#6366f1' }
+                type: 'bar', orientation: 'h', marker: { color: '#00ff66' }
             }], {
-                title: { text: 'NEXT TOKEN PROBABILITIES', font: { size: 13, color: '#a1a1aa', weight: 'bold' } },
+                title: { text: 'NEXT TOKEN PROBABILITIES', font: { size: 14, color: '#a1a1aa', weight: 'bold' } },
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { color: '#71717a', size: 11, family: 'JetBrains Mono' },
                 xaxis: { gridcolor: '#27272a', title: 'Probability' }, yaxis: { autorange: 'reversed' },
@@ -968,27 +951,25 @@ graph LR
             });
         }
 
-        // ═══════════════════════════════════════════
-        //  LIVE CHAT (with token-by-token simulated streaming)
-        // ═══════════════════════════════════════════
+        // ═══════════════════════ LIVE CHAT ═══════════════════════
         function renderInference() {
             vizContainer.innerHTML = `
                 <div class="max-w-3xl mx-auto space-y-6 py-6 p-6 md:p-10">
                     <div class="bg-[#111] p-8 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden">
                         <div id="rgb-bar" class="rgb-bar rgb-bar-glow absolute top-0 left-0 right-0"></div>
-                        <h3 class="text-xl font-bold mb-6 flex items-center justify-between mt-2">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center justify-between mt-2">
                             <div class="flex items-center gap-3"><span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span> Live Inference</div>
-                            <button id="clear-console" class="text-xs font-bold text-gray-500 hover:text-red-400 uppercase tracking-widest">Clear</button>
+                            <button id="clear-console" class="text-sm font-bold text-gray-500 hover:text-red-400 uppercase tracking-widest">Clear</button>
                         </h3>
-                        <div id="chat-output" class="min-h-[220px] bg-background/50 rounded-2xl p-6 mb-6 whitespace-pre-wrap text-gray-300 border border-border/50 text-base shadow-inner overflow-y-auto custom-scrollbar max-h-[400px]" style="line-height:1.7;">Ready...</div>
+                        <div id="chat-output" class="min-h-[220px] bg-background/50 rounded-2xl p-6 mb-6 whitespace-pre-wrap text-gray-300 border border-border/50 text-lg shadow-inner overflow-y-auto custom-scrollbar max-h-[400px]" style="line-height:1.7;">Ready...</div>
                         <div class="grid grid-cols-3 gap-4 mb-6">
-                            <div><label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Temp</label><input id="temp-range" type="range" min="0.1" max="2.0" step="0.1" value="1.0" class="w-full"><div class="text-xs font-mono mt-1 text-gray-400"><span id="temp-val">1.0</span></div></div>
-                            <div><label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Tokens</label><input id="tokens-range" type="range" min="10" max="500" step="10" value="150" class="w-full"><div class="text-xs font-mono mt-1 text-gray-400"><span id="tokens-val">150</span></div></div>
-                            <div><label class="block text-xs font-semibold text-gray-500 mb-1 uppercase">Top K</label><input id="topk-range" type="range" min="1" max="100" step="1" value="50" class="w-full"><div class="text-xs font-mono mt-1 text-gray-400"><span id="topk-val">50</span></div></div>
+                            <div><label class="block text-sm font-semibold text-gray-500 mb-1 uppercase">Temp</label><input id="temp-range" type="range" min="0.1" max="2.0" step="0.1" value="1.0" class="w-full"><div class="text-sm font-mono mt-1 text-gray-400"><span id="temp-val">1.0</span></div></div>
+                            <div><label class="block text-sm font-semibold text-gray-500 mb-1 uppercase">Tokens</label><input id="tokens-range" type="range" min="10" max="500" step="10" value="150" class="w-full"><div class="text-sm font-mono mt-1 text-gray-400"><span id="tokens-val">150</span></div></div>
+                            <div><label class="block text-sm font-semibold text-gray-500 mb-1 uppercase">Top K</label><input id="topk-range" type="range" min="1" max="100" step="1" value="50" class="w-full"><div class="text-sm font-mono mt-1 text-gray-400"><span id="topk-val">50</span></div></div>
                         </div>
                         <div class="flex gap-3">
-                            <input id="chat-input" type="text" class="flex-1 bg-background border border-border rounded-xl px-5 py-3.5 text-base outline-none focus:ring-2 focus:ring-primary/50" placeholder="Enter sequence start...">
-                            <button id="chat-send" class="px-7 py-3.5 bg-primary hover:bg-primary/80 text-white rounded-xl font-bold text-base transition-all shadow-lg shadow-primary/20">Generate</button>
+                            <input id="chat-input" type="text" class="flex-1 bg-background border border-border rounded-xl px-5 py-4 text-lg outline-none focus:ring-2 focus:ring-primary/50" placeholder="Enter sequence start...">
+                            <button id="chat-send" class="px-8 py-4 bg-primary hover:brightness-110 text-background rounded-xl font-bold text-lg transition-all shadow-lg shadow-primary/20">Generate</button>
                         </div>
                     </div>
                 </div>`;
@@ -1006,9 +987,8 @@ graph LR
             send.onclick = async () => {
                 const p = inp.value; if (!p) return;
                 send.disabled = true;
-                // Animated "Generating" with bouncing dots
                 rgbBar.classList.add('rgb-bar-animate');
-                out.innerHTML = '<span class="text-gray-500">Generating<span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></span>';
+                out.innerHTML = '<span class="text-gray-500 text-lg">Generating<span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></span>';
 
                 try {
                     const res = await fetch('/api/neonconnect/generate', {
@@ -1017,10 +997,8 @@ graph LR
                     });
                     const data = await res.json();
                     if (data.prompt && data.completion) {
-                        // Token-by-token simulated streaming
                         out.innerHTML = `<span class="prompt-text">${data.prompt}</span><span id="stream-target" class="gen-text typewriter-cursor"></span>`;
                         const target = document.getElementById('stream-target');
-                        // Split by spaces to simulate token-by-token
                         const rawTokens = data.completion.match(/\S+\s*/g) || [data.completion];
                         let i = 0;
                         const speed = Math.max(20, Math.min(60, 4000 / rawTokens.length));
@@ -1050,7 +1028,7 @@ graph LR
             };
         }
 
-        // ═══════════════════════════════════════════
+        // ═══════════════════════
         init();
     </script>
 </body>
