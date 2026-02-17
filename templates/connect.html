@@ -275,6 +275,18 @@
         let models = [];
 
         const modelSelect = document.getElementById('model-select');
+
+        // Smart Prompt Logic
+        modelSelect.addEventListener('change', (e) => {
+            const modelId = e.target.value;
+            // promptInput is already declared globally, no need to re-declare
+            if (modelId.toLowerCase().includes('hp')) {
+                promptInput.value = "The truth. It is a beautiful and terrible thing, and should therefore be treated with great caution.";
+            } else {
+                promptInput.value = "Harry looked at the mirror and saw";
+            }
+        });
+
         const modelInfo = document.getElementById('model-info');
         const promptInput = document.getElementById('prompt-input');
         const visualizeBtn = document.getElementById('visualize-btn');
