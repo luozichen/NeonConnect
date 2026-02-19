@@ -701,7 +701,7 @@
             const currentModelId = modelSelect.value || "";
             let attnGateLabel = "Intent Gating (⊙ σ(I))";
             let mlpGateLabel = "Hadamard (⊙ σ)";
-            if (currentModelId.includes("neon185")) mlpGateLabel = "Hadamard (⊙ SiLU)";
+            if (currentModelId.includes("neon185") || currentModelId.includes("neon213")) mlpGateLabel = "Hadamard (⊙ SiLU)";
 
             const mermaidCode = `
 graph LR
