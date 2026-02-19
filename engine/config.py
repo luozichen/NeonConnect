@@ -52,7 +52,7 @@ def get_config(model_name):
             config['d_ff'] = 592
         
         # Frankenstein Configs
-        if model_name in [f"neon{i:03d}" for i in range(61, 201)]:
+        if model_name in [f"neon{i:03d}" for i in range(61, 214)]:
             config['d_model'], config['n_layers'], config['n_head'] = 256, 4, 4
             if model_name == 'neon061': config['d_ff'] = 2736 # ~10M
             elif model_name == 'neon066': config['d_ff'] = 172 # match neon016
@@ -153,6 +153,9 @@ def get_config(model_name):
             elif model_name == 'neon167': config['d_model'], config['d_ff'] = 272, 1072 # 5.0M Non-Embed Class
             elif model_name in [f"neon{i}" for i in range(168, 188)]: 
                 config['d_model'], config['d_ff'] = 272, 1072 # 5.0M Study Class
+            elif model_name == 'neon213':
+                config['d_model'], config['n_head'], config['n_layers'], config['d_ff'] = 384, 6, 8, 1536
+                config['conv_k'], config['mlp_k'] = 9, 9  # ~20M Growable (FineWeb)
             else: config['d_ff'] = 512
         
         return config
