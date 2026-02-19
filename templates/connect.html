@@ -999,7 +999,7 @@ graph LR
                     if (data.prompt && data.completion) {
                         out.innerHTML = `<span class="prompt-text">${data.prompt}</span><span id="stream-target" class="gen-text typewriter-cursor"></span>`;
                         const target = document.getElementById('stream-target');
-                        const rawTokens = data.completion.match(/\S+\s*/g) || [data.completion];
+                        const rawTokens = data.completion.split(/(\s+)/).filter(x => x !== "");
                         let i = 0;
                         const speed = Math.max(20, Math.min(60, 4000 / rawTokens.length));
                         function typeNextToken() {
