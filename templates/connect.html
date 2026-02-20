@@ -534,7 +534,15 @@
                 const res = await fetch('/api/neonconnect/models');
                 models = await res.json();
                 modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
-                if (models.length > 0) selectModel(models[0].id);
+
+                // Set neon213 k21 as default if exists
+                const k21 = models.find(m => m.model_name === 'neon213' && m.id.includes('fp16'));
+                if (k21) {
+                    modelSelect.value = k21.id;
+                    selectModel(k21.id);
+                } else if (models.length > 0) {
+                    selectModel(models[0].id);
+                }
             } catch (e) { console.error("Init Error:", e); }
             renderTab('input');
         }
@@ -552,9 +560,13 @@
                 </div>`;
             const promptEl = document.getElementById('prompt-input');
             if (promptEl) {
-                promptEl.value = currentModel.data_name.includes('wiki')
-                    ? "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing "
-                    : "Harry looked at the mirror and saw";
+                if (currentModel.model_name === 'neon213') {
+                    promptEl.value = "The underlying purpose and ultimate meaning of life is";
+                } else {
+                    promptEl.value = currentModel.data_name.includes('wiki')
+                        ? "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing "
+                        : "Harry looked at the mirror and saw";
+                }
             }
             updateModelBadge();
             const activeTab = document.querySelector('.tab-btn.active');
