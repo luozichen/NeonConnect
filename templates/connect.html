@@ -962,10 +962,17 @@ graph LR
                             <button id="clear-console" class="text-sm font-bold text-gray-500 hover:text-red-400 uppercase tracking-widest">Clear</button>
                         </h3>
                         <div id="chat-output" class="min-h-[220px] bg-background/50 rounded-2xl p-6 mb-6 whitespace-pre-wrap text-gray-300 border border-border/50 text-lg shadow-inner overflow-y-auto custom-scrollbar max-h-[400px]" style="line-height:1.7;">Ready...</div>
-                        <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="grid grid-cols-4 gap-4 mb-6">
                             <div><label class="block text-sm font-semibold text-gray-500 mb-1 uppercase">Temp</label><input id="temp-range" type="range" min="0.1" max="2.0" step="0.1" value="1.0" class="w-full"><div class="text-sm font-mono mt-1 text-gray-400"><span id="temp-val">1.0</span></div></div>
                             <div><label class="block text-sm font-semibold text-gray-500 mb-1 uppercase">Tokens</label><input id="tokens-range" type="range" min="10" max="500" step="10" value="150" class="w-full"><div class="text-sm font-mono mt-1 text-gray-400"><span id="tokens-val">150</span></div></div>
                             <div><label class="block text-sm font-semibold text-gray-500 mb-1 uppercase">Top K</label><input id="topk-range" type="range" min="1" max="100" step="1" value="50" class="w-full"><div class="text-sm font-mono mt-1 text-gray-400"><span id="topk-val">50</span></div></div>
+                            <div class="flex flex-col"><label class="block text-sm font-semibold text-gray-500 mb-1 uppercase">Correction</label>
+                                <label class="relative inline-flex items-center cursor-pointer mt-1">
+                                    <input id="core-toggle" type="checkbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    <span class="ml-2 text-xs font-bold text-gray-500 uppercase">Beta</span>
+                                </label>
+                            </div>
                         </div>
                         <div class="flex gap-3">
                             <input id="chat-input" type="text" class="flex-1 bg-background border border-border rounded-xl px-5 py-4 text-lg outline-none focus:ring-2 focus:ring-primary/50" placeholder="Enter sequence start...">
@@ -991,9 +998,17 @@ graph LR
                 out.innerHTML = '<span class="text-gray-500 text-lg">Generating<span class="gen-dots"><span>.</span><span>.</span><span>.</span></span></span>';
 
                 try {
+                    const useCorrection = document.getElementById('core-toggle').checked;
                     const res = await fetch('/api/neonconnect/generate', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ model_id: currentModel.id, prompt: p, max_tokens: parseInt(lr.value), temperature: parseFloat(tr.value), top_k: parseInt(kr.value) })
+                        body: JSON.stringify({
+                            model_id: currentModel.id,
+                            prompt: p,
+                            max_tokens: parseInt(lr.value),
+                            temperature: parseFloat(tr.value),
+                            top_k: parseInt(kr.value),
+                            use_correction: useCorrection
+                        })
                     });
                     const data = await res.json();
                     if (data.prompt && data.completion) {

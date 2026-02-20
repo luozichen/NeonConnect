@@ -102,32 +102,87 @@ class NeonModelEngine:
         return model, tokenizer, config
 
     @torch.no_grad()
-    def generate(self, model_id, prompt, max_new_tokens=100, temperature=1.0, top_k=50):
+    def generate(self, model_id, prompt, max_new_tokens=100, temperature=1.0, top_k=50, use_correction=False):
         model, tokenizer, config = self.load_model(model_id)
         encoded = tokenizer.encode(prompt)
         ids = encoded.ids
         idx = torch.tensor([ids], dtype=torch.long, device=self.device)
         block_size = config['block_size']
         generated = list(ids)
-        for _ in range(max_new_tokens):
-            idx_cond = idx if idx.size(1) <= block_size else idx[:, -block_size:]
-            logits, _ = model(idx_cond)
-            logits = logits[:, -1, :] / max(temperature, 1e-5)
-            if top_k is not None and top_k > 0:
-                v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
-                logits[logits < v[:, [-1]]] = -float('inf')
-            probs = torch.softmax(logits, dim=-1)
-            next_token = torch.multinomial(probs, num_samples=1)
-            idx = torch.cat([idx, next_token], dim=1)
-            generated.append(next_token.item())
-            if next_token.item() == 0: break
+
+        steering_vector = None
+        if use_correction and len(ids) > 1:
+            # --- PHASE 1: CALIBRATION (Stockfish-style Corrhist) ---
+            # Capture normalized hidden states during prompt processing
+            hidden_registry = []
+            def calibration_hook(module, inp, out):
+                hidden_registry.append(out.detach()) # [1, T, D]
+            
+            h = model.ln_f.register_forward_hook(calibration_hook)
+            try:
+                model(idx)
+            finally:
+                h.remove()
+            
+            if hidden_registry:
+                # The prompt hidden states for tokens [0, T-1] predict tokens [1, T]
+                h_prompt = hidden_registry[0][0] # [T, D]
+                
+                # The target embeddings for the NEXT tokens in the prompt
+                # Note: ids[1:] are the "ground truth" the prompt tokens should have predicted
+                next_token_ids = torch.tensor(ids[1:], device=self.device)
+                target_embs = model.token_emb(next_token_ids) # [T-1, D]
+                
+                # Normalize targets to play in the same RMSNorm'd space as h_prompt
+                # Head expects RMSNorm'd vectors
+                target_embs_norm = model.ln_f(target_embs)
+                
+                # Predictions at [0:T-1] target tokens [1:T]
+                preds = h_prompt[:-1] 
+                errors = target_embs_norm - preds # [T-1, D]
+                
+                # Quadratic weighting: end of prompt counts more (i^2)
+                weights = torch.arange(1, len(errors) + 1, device=self.device).float().pow(2)
+                weights = weights / weights.sum()
+                
+                steering_vector = (errors * weights.unsqueeze(-1)).sum(dim=0, keepdim=True) # [1, D]
+
+        # --- PHASE 2: STEERED GENERATION ---
+        h_steer = None
+        if steering_vector is not None:
+            def steering_hook(module, inp, out):
+                # Steering is only applied to the NEWLY generated token (last position)
+                # During loop, out is [1, T_current, D]
+                # We nudge the last vector before it hits the head
+                out[:, -1:, :] += steering_vector
+                return out
+            h_steer = model.ln_f.register_forward_hook(steering_hook)
+
+        try:
+            for _ in range(max_new_tokens):
+                idx_cond = idx if idx.size(1) <= block_size else idx[:, -block_size:]
+                logits, _ = model(idx_cond)
+                logits = logits[:, -1, :] / max(temperature, 1e-5)
+                
+                if top_k is not None and top_k > 0:
+                    v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+                    logits[logits < v[:, [-1]]] = -float('inf')
+                
+                probs = torch.softmax(logits, dim=-1)
+                next_token = torch.multinomial(probs, num_samples=1)
+                idx = torch.cat([idx, next_token], dim=1)
+                generated.append(next_token.item())
+                if next_token.item() == 0: break
+        finally:
+            if h_steer: h_steer.remove()
         
         # Return prompt and completion separately for UI styling
         prompt_ids = ids
         new_ids = generated[len(ids):]
         return {
             "prompt": tokenizer.decode(prompt_ids).replace(" @-@ ", "-"),
-            "completion": tokenizer.decode(new_ids).replace(" @-@ ", "-")
+            "completion": tokenizer.decode(new_ids).replace(" @-@ ", "-"),
+            "corrected": steering_vector is not None
         }
 
     def capture_visualization(self, model_id, prompt):
