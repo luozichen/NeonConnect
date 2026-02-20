@@ -84,7 +84,7 @@ class NeonModelEngine:
             raise FileNotFoundError(f"Tokenizer not found for {model_id}")
         tokenizer = Tokenizer.from_file(tok_path)
         vocab_size = tokenizer.get_vocab_size()
-        config = get_config(model_name)
+        config = get_config(model_name, data_name)
         config['vocab_size'] = vocab_size
         cls_name = model_name.capitalize()
         mod_name = f"NeonConnect.networks.{model_name}"
