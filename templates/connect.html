@@ -862,10 +862,39 @@ graph LR
                 yaxis: { autorange: 'reversed', showticklabels: false, gridcolor: '#27272a' },
                 margin: { l: 10, r: 10, b: 10, t: 35 }, hovermode: 'closest'
             };
-            const plotH = (id, z, title) => {
-                if (!z) return;
-                Plotly.newPlot(id, [{ z, x: Array.from({ length: z[0].length }, (_, i) => `d${i}`), y: tokens, type: 'heatmap', colorscale: 'RdBu', zmid: 0, showscale: false }],
-                    { ...baseL, title: { text: title, font: { size: 11, weight: 'bold' } } }, { displayModeBar: false, responsive: true });
+            const plotH = (id, data, title, type = 'div') => {
+                if (!data) return;
+                const z = data;
+                // Calculate symmetric range for divergent scales
+                let maxAbs = 0;
+                if (type === 'div') {
+                    const flat = z.flat();
+                    const min = Math.min(...flat);
+                    const max = Math.max(...flat);
+                    maxAbs = Math.max(Math.abs(min), Math.abs(max)) || 0.1;
+                    // Ensure a minimum range to avoid visual noise
+                    if (maxAbs < 0.001) maxAbs = 0.01;
+                }
+
+                const trace = {
+                    z,
+                    x: Array.from({ length: z[0].length }, (_, i) => `d${i}`),
+                    y: tokens,
+                    type: 'heatmap',
+                    colorscale: type === 'attn' ? 'Blues' : 'balance',
+                    showscale: false,
+                    hovertemplate: `<b>Token:</b> %{y}<br><b>Dim:</b> %{x}<br><b>Value:</b> %{z:.4f}<extra></extra>`
+                };
+
+                if (type === 'div') {
+                    trace.zmin = -maxAbs;
+                    trace.zmax = maxAbs;
+                    trace.zmid = 0;
+                }
+
+                Plotly.newPlot(id, [trace],
+                    { ...baseL, title: { text: title, font: { size: 11, weight: 'bold' } } },
+                    { displayModeBar: false, responsive: true });
             };
 
             if (layerData.raw_q) plotH('q-plot', layerData.raw_q[0][head], 'RAW Q');
@@ -879,7 +908,11 @@ graph LR
             if (layerData.conv_i) plotH('conv-i-plot', layerData.conv_i[0][head], 'CONV I');
 
             if (layerData.attn) {
-                Plotly.newPlot('attn-plot', [{ z: layerData.attn[0][head], x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false }],
+                const z = layerData.attn[0][head];
+                Plotly.newPlot('attn-plot', [{
+                    z, x: tokens, y: tokens, type: 'heatmap', colorscale: 'Blues', showscale: false,
+                    hovertemplate: `<b>From:</b> %{y}<br><b>To:</b> %{x}<br><b>Weight:</b> %{z:.4f}<extra></extra>`
+                }],
                     {
                         ...baseL, title: { text: 'ATTENTION WEIGHTS', font: { size: 11 } }, margin: { l: 80, r: 20, b: 60, t: 40 },
                         xaxis: { ...baseL.xaxis, showticklabels: true, tickangle: 45 }, yaxis: { ...baseL.yaxis, showticklabels: true }
@@ -941,8 +974,24 @@ graph LR
                     if (!data) continue;
                     for (let h = 0; h < nh; h++) {
                         const z = data[0][h];
-                        const colorscale = (type === 'attn') ? 'Blues' : 'RdBu';
-                        Plotly.newPlot(`grid-l${l}-h${h}`, [{ z, type: 'heatmap', colorscale, zmid: (type === 'attn' ? null : 0), showscale: false }],
+                        let trace = {
+                            z, type: 'heatmap', showscale: false,
+                            hovertemplate: `<b>Token:</b> %{y}<br><b>Value:</b> %{z:.4f}<extra></extra>`
+                        };
+
+                        if (type === 'attn') {
+                            trace.colorscale = 'Blues';
+                        } else {
+                            trace.colorscale = 'balance';
+                            // Dynamic symmetric range per plot to maximize local contrast
+                            const flat = z.flat();
+                            const maxAbs = Math.max(Math.abs(Math.min(...flat)), Math.abs(Math.max(...flat))) || 0.1;
+                            trace.zmin = -maxAbs;
+                            trace.zmax = maxAbs;
+                            trace.zmid = 0;
+                        }
+
+                        Plotly.newPlot(`grid-l${l}-h${h}`, [trace],
                             {
                                 margin: { l: 0, r: 0, b: 0, t: 0 }, xaxis: { showticklabels: false, showgrid: false }, yaxis: { autorange: 'reversed', showticklabels: false, showgrid: false },
                                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
