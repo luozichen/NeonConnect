@@ -529,6 +529,16 @@
         if (localStorage.getItem('sidebar-collapsed') === '1') setSidebarState(true);
 
         // ═══════════════════════ INIT ═══════════════════════
+        function getInitialPrompt(model) {
+            if (!model) return "Harry looked at the mirror and saw";
+            if (model.model_name === 'neon213') {
+                return "The underlying purpose and ultimate meaning of life is";
+            }
+            return model.data_name.includes('wiki')
+                ? "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing "
+                : "Harry looked at the mirror and saw";
+        }
+
         async function init() {
             try {
                 const res = await fetch('/api/neonconnect/models');
@@ -560,13 +570,7 @@
                 </div>`;
             const promptEl = document.getElementById('prompt-input');
             if (promptEl) {
-                if (currentModel.model_name === 'neon213') {
-                    promptEl.value = "The underlying purpose and ultimate meaning of life is";
-                } else {
-                    promptEl.value = currentModel.data_name.includes('wiki')
-                        ? "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing "
-                        : "Harry looked at the mirror and saw";
-                }
+                promptEl.value = getInitialPrompt(currentModel);
             }
             updateModelBadge();
             const activeTab = document.querySelector('.tab-btn.active');
@@ -685,11 +689,7 @@
 
         // ═══════════════════════ INPUT TAB ═══════════════════════
         function renderInput() {
-            const defaultPrompt = currentModel
-                ? (currentModel.data_name.includes('wiki')
-                    ? "Black holes typically form when massive stars collapse at the end of their life cycle. After a black hole has formed, it can grow by absorbing "
-                    : "Harry looked at the mirror and saw")
-                : "Harry looked at the mirror and saw";
+            const defaultPrompt = getInitialPrompt(currentModel);
             const modelLabel = currentModel ? `${currentModel.model_name} · ${currentModel.data_name}` : 'No model loaded';
 
             vizContainer.innerHTML = `
