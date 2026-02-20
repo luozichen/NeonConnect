@@ -85,47 +85,62 @@
             border-radius: 4px;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            transition: width var(--transition-speed) ease;
-            will-change: width;
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 100%;
+                --sidebar-collapsed: 0px;
+            }
+
+            .sidebar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                background: #0a0a0b;
+                z-index: 50;
+            }
+
+            .sidebar-toggle-mobile {
+                display: flex !important;
+            }
+
+            #sidebar-toggle-btn {
+                display: none;
+            }
+        }
+
+        .sidebar-toggle-mobile {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: #000;
+            border-radius: 50%;
+            z-index: 60;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0, 255, 102, 0.4);
+            border: none;
+            cursor: pointer;
         }
 
         .sidebar.collapsed {
             width: var(--sidebar-collapsed);
+            border-right-width: 0;
         }
 
-        .sidebar.collapsed .sidebar-label {
-            opacity: 0;
-            pointer-events: none;
-            width: 0;
-            overflow: hidden;
-        }
-
-        .sidebar.collapsed .sidebar-section {
-            padding-left: 14px;
-            padding-right: 14px;
-        }
-
-        .sidebar.collapsed #model-select {
-            opacity: 0;
-            height: 0;
-            margin: 0;
-            padding: 0;
-            border: 0;
-            overflow: hidden;
-        }
-
-        .sidebar.collapsed #model-info {
-            opacity: 0;
-            height: 0;
-            overflow: hidden;
-        }
-
+        .sidebar.collapsed .sidebar-label,
+        .sidebar.collapsed #model-select,
+        .sidebar.collapsed #model-info,
         .sidebar.collapsed .sidebar-bottom-items {
             opacity: 0;
             pointer-events: none;
+            overflow: hidden;
+            white-space: nowrap;
         }
 
         .sidebar .sidebar-label,
@@ -434,6 +449,8 @@
 <body class="h-screen flex overflow-hidden text-base">
 
     <!-- Sidebar -->
+    <button id="mobile-toggle" class="sidebar-toggle-mobile"
+        onclick="setSidebarState(!sidebar.classList.contains('collapsed'))">☰</button>
     <aside id="sidebar"
         class="sidebar h-full border-r border-border flex flex-col bg-surface/40 backdrop-blur-sm shrink-0 z-30">
         <div class="flex items-center gap-3 p-4 border-b border-border sidebar-section" style="min-height: 56px;">
@@ -868,30 +885,59 @@ graph LR
 
         // ═══════════════════════ GRID ═══════════════════════
         function renderAllHeads() {
-            const nl = lastVisData.config.n_layers, nh = lastVisData.config.n_head;
             vizContainer.innerHTML = `
-                <div class="flex flex-col gap-6 py-4 overflow-x-auto custom-scrollbar p-6 md:p-10">
-                    <div class="flex min-w-[800px]">
-                        <div class="w-24 shrink-0"></div>
+                <div class="p-6 md:p-10 space-y-6">
+                    <div class="flex gap-4 items-center bg-surface/40 p-4 rounded-xl border border-border max-w-2xl">
+                        <label class="text-sm font-bold text-gray-500 uppercase tracking-widest">Grid Type</label>
+                        <select id="grid-type-sel" class="bg-surface border border-border rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                            <option value="attn">Attention Matrices</option>
+                            <option value="raw_q">Raw Query (Q)</option>
+                            <option value="raw_k">Raw Key (K)</option>
+                            <option value="raw_v">Raw Value (V)</option>
+                            <option value="raw_i">Raw Intent (I)</option>
+                            <option value="conv_q">Conv Query (Q')</option>
+                            <option value="conv_k">Conv Key (K')</option>
+                            <option value="conv_v">Conv Value (V')</option>
+                            <option value="conv_i">Conv Intent (I')</option>
+                        </select>
+                    </div>
+                    <div id="grid-mount" class="flex flex-col gap-6 py-4 overflow-x-auto custom-scrollbar"></div>
+                </div>`;
+
+            const update = () => plotAllHeadsGrid(document.getElementById('grid-type-sel').value);
+            document.getElementById('grid-type-sel').onchange = update;
+            update();
+        }
+
+        function plotAllHeadsGrid(type) {
+            const mount = document.getElementById('grid-mount');
+            const nl = lastVisData.config.n_layers, nh = lastVisData.config.n_head;
+
+            mount.innerHTML = `
+                <div class="flex min-w-[800px]">
+                    <div class="w-24 shrink-0"></div>
+                    <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
+                        ${Array.from({ length: nh }, (_, i) => `<div class="text-center text-sm font-bold text-gray-500">Head ${i + 1}</div>`).join('')}
+                    </div>
+                </div>
+                ${Array.from({ length: nl }, (_, l) => `
+                    <div class="flex items-stretch min-w-[800px]">
+                        <div class="w-24 shrink-0 flex items-center justify-end text-sm font-bold text-gray-500 border-r border-border pr-4 mr-4">Layer ${l + 1}</div>
                         <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
-                            ${Array.from({ length: nh }, (_, i) => `<div class="text-center text-sm font-bold text-gray-500">Head ${i + 1}</div>`).join('')}
+                            ${Array.from({ length: nh }, (_, h) => `<div id="grid-l${l}-h${h}" class="aspect-square bg-surface/20 border border-border rounded-xl"></div>`).join('')}
                         </div>
                     </div>
-                    ${Array.from({ length: nl }, (_, l) => `
-                        <div class="flex items-stretch min-w-[800px]">
-                            <div class="w-24 shrink-0 flex items-center justify-end text-sm font-bold text-gray-500 border-r border-border pr-4 mr-4">Layer ${l + 1}</div>
-                            <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
-                                ${Array.from({ length: nh }, (_, h) => `<div id="grid-l${l}-h${h}" class="aspect-square bg-surface/20 border border-border rounded-xl"></div>`).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>`;
+                `).join('')}`;
+
             requestAnimationFrame(() => {
                 for (let l = 0; l < nl; l++) {
-                    const layerAttn = lastVisData.layers[l].attn;
-                    if (!layerAttn) continue;
+                    const layer = lastVisData.layers[l];
+                    const data = layer[type];
+                    if (!data) continue;
                     for (let h = 0; h < nh; h++) {
-                        Plotly.newPlot(`grid-l${l}-h${h}`, [{ z: layerAttn[0][h], type: 'heatmap', colorscale: 'Blues', showscale: false }],
+                        const z = data[0][h];
+                        const colorscale = (type === 'attn') ? 'Blues' : 'RdBu';
+                        Plotly.newPlot(`grid-l${l}-h${h}`, [{ z, type: 'heatmap', colorscale, zmid: (type === 'attn' ? null : 0), showscale: false }],
                             {
                                 margin: { l: 0, r: 0, b: 0, t: 0 }, xaxis: { showticklabels: false, showgrid: false }, yaxis: { autorange: 'reversed', showticklabels: false, showgrid: false },
                                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
