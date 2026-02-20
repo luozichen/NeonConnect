@@ -130,7 +130,12 @@
 
         .sidebar.collapsed {
             width: var(--sidebar-collapsed);
-            border-right-width: 0;
+            border-right-color: transparent !important;
+            overflow: hidden !important;
+        }
+
+        .sidebar.collapsed * {
+            border-color: transparent !important;
         }
 
         .sidebar.collapsed .sidebar-label,
@@ -901,7 +906,7 @@ graph LR
                             <option value="conv_i">Conv Intent (I')</option>
                         </select>
                     </div>
-                    <div id="grid-mount" class="flex flex-col gap-6 py-4 overflow-x-auto custom-scrollbar"></div>
+                    <div id="grid-mount" class="flex flex-col gap-2 py-4 overflow-x-auto custom-scrollbar"></div>
                 </div>`;
 
             const update = () => plotAllHeadsGrid(document.getElementById('grid-type-sel').value);
@@ -914,17 +919,17 @@ graph LR
             const nl = lastVisData.config.n_layers, nh = lastVisData.config.n_head;
 
             mount.innerHTML = `
-                <div class="flex min-w-[800px]">
+                <div class="flex min-w-[800px] mb-1">
                     <div class="w-24 shrink-0"></div>
-                    <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
-                        ${Array.from({ length: nh }, (_, i) => `<div class="text-center text-sm font-bold text-gray-500">Head ${i + 1}</div>`).join('')}
+                    <div class="flex-1 grid gap-2" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
+                        ${Array.from({ length: nh }, (_, i) => `<div class="text-center text-[10px] font-bold text-gray-500 uppercase tracking-tighter">H${i + 1}</div>`).join('')}
                     </div>
                 </div>
                 ${Array.from({ length: nl }, (_, l) => `
                     <div class="flex items-stretch min-w-[800px]">
-                        <div class="w-24 shrink-0 flex items-center justify-end text-sm font-bold text-gray-500 border-r border-border pr-4 mr-4">Layer ${l + 1}</div>
-                        <div class="flex-1 grid gap-3" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
-                            ${Array.from({ length: nh }, (_, h) => `<div id="grid-l${l}-h${h}" class="aspect-square bg-surface/20 border border-border rounded-xl"></div>`).join('')}
+                        <div class="w-24 shrink-0 flex items-center justify-end text-[10px] font-bold text-gray-500 border-r border-border/50 pr-4 mr-4">L${l + 1}</div>
+                        <div class="flex-1 grid gap-2" style="grid-template-columns: repeat(${nh}, minmax(0, 1fr));">
+                            ${Array.from({ length: nh }, (_, h) => `<div id="grid-l${l}-h${h}" class="h-20 md:h-24 bg-surface/20 border border-border/30 rounded-lg"></div>`).join('')}
                         </div>
                     </div>
                 `).join('')}`;
