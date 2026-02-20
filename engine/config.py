@@ -155,7 +155,7 @@ def get_config(model_name, data_name=None):
                 config['d_model'], config['d_ff'] = 272, 1072 # 5.0M Study Class
             elif model_name == 'neon213':
                 config['d_model'], config['n_head'], config['n_layers'], config['d_ff'] = 384, 6, 8, 1536
-                k = 21 if data_name and 'k21' in data_name else 9
+                k = 21 if data_name and ('k21' in data_name or 'fp16' in data_name) else 21
                 config['conv_k'], config['mlp_k'] = k, k  # Growable (FineWeb)
             else: config['d_ff'] = 512
         
