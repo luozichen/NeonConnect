@@ -737,6 +737,15 @@
             let mlpGateLabel = "Hadamard (⊙ σ)";
             if (currentModelId.includes("neon185") || currentModelId.includes("neon213")) mlpGateLabel = "Hadamard (⊙ SiLU)";
 
+            // Get kernel sizes from last capture if available, otherwise default to SOTA values
+            let convK = lastVisData && lastVisData.config ? lastVisData.config.conv_k : 21;
+            let mlpK = lastVisData && lastVisData.config ? lastVisData.config.mlp_k : 21;
+
+            // Heuristic for older models if no data captured yet
+            if (!lastVisData) {
+                if (currentModelId.includes("neon167")) { convK = 3; mlpK = 9; }
+            }
+
             const mermaidCode = `
 graph LR
     linkStyle default interpolate linear
@@ -752,10 +761,10 @@ graph LR
             PROJ -- K --> S2["K Split"]
             PROJ -- V --> S3["V Split"]
             PROJ -- I --> S4["I Split"]
-            S1 --> CQ["K3 DepthConv"]
-            S2 --> CK["K3 DepthConv"]
-            S3 --> CV["K3 DepthConv"]
-            S4 --> CI["K3 DepthConv"]
+            S1 --> CQ["K${convK} DepthConv"]
+            S2 --> CK["K${convK} DepthConv"]
+            S3 --> CV["K${convK} DepthConv"]
+            S4 --> CI["K${convK} DepthConv"]
             CQ --> ROPE1["RoPE"]
             CK --> ROPE2["RoPE"]
             ROPE1 --> DOT["Softmax(Q @ Kᵀ / √d)"]
@@ -772,7 +781,7 @@ graph LR
         subgraph Hydra ["Hydra MLP"]
             direction LR
             LN2 --> HW1["Content W1"]
-            LN2 --> HC9["K9 DepthConv"]
+            LN2 --> HC9["K${mlpK} DepthConv"]
             HC9 --> HG["Gate Pattern"]
             HG --> HM["${mlpGateLabel}"]
             HW1 --> HM
