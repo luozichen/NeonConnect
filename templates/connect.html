@@ -448,6 +448,90 @@
             text-transform: uppercase;
             letter-spacing: 0.08em;
         }
+
+        /* Mermaid Enhancements */
+        .mermaid .node rect,
+        .mermaid .node polygon,
+        .mermaid .node circle,
+        .mermaid .node ellipse,
+        .mermaid .node path {
+            fill: rgba(26, 26, 29, 0.8) !important;
+            stroke: rgba(255, 255, 255, 0.1) !important;
+            stroke-width: 1px !important;
+        }
+
+        .mermaid .cluster rect {
+            fill: rgba(255, 255, 255, 0.02) !important;
+            stroke: rgba(255, 255, 255, 0.05) !important;
+            stroke-dasharray: 5, 5;
+        }
+
+        .mermaid .edgePath .path {
+            stroke: rgba(255, 255, 255, 0.2) !important;
+            stroke-width: 1.5px !important;
+        }
+
+        .mermaid .edgeLabel {
+            background-color: transparent !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-size: 11px !important;
+        }
+
+        .mermaid .node .label {
+            color: #fff !important;
+        }
+
+        /* Custom Node Classes */
+        .m-block {
+            fill: rgba(0, 255, 102, 0.05) !important;
+            stroke: rgba(0, 255, 102, 0.3) !important;
+        }
+
+        .m-attn {
+            fill: rgba(0, 255, 255, 0.05) !important;
+            stroke: rgba(0, 255, 255, 0.3) !important;
+        }
+
+        .m-mlp {
+            fill: rgba(255, 0, 255, 0.05) !important;
+            stroke: rgba(255, 0, 255, 0.3) !important;
+        }
+
+        .m-norm {
+            fill: rgba(255, 255, 255, 0.05) !important;
+            stroke: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .m-linear {
+            fill: rgba(255, 255, 0, 0.05) !important;
+            stroke: rgba(255, 255, 0, 0.3) !important;
+        }
+
+        .node-html {
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .node-title {
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .node-sub {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .node-icon {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
     </style>
 </head>
 
@@ -749,50 +833,72 @@
             const mermaidCode = `
 graph LR
     linkStyle default interpolate linear
-    A["Sequence"] --> B["Embedding"]
-    B --> C["Residual Stream"]
-    subgraph Block ["Transformer Block (x4)"]
+    
+    A["<div class='node-html'><div class='node-icon'>🎯</div><div class='node-title'>Sequence</div><div class='node-sub'>Input Tokens</div></div>"] 
+    B["<div class='node-html'><div class='node-icon'>🔤</div><div class='node-title'>Embedding</div><div class='node-sub'>Learned Table</div></div>"]
+    C["<div class='node-html'><div class='node-icon'>〰️</div><div class='node-title'>Residual Stream</div><div class='node-sub'>d=384</div></div>"]
+    
+    A --> B
+    B --> C
+    
+    subgraph Block [" <div class='section-title' style='color:rgba(255,255,255,0.3)'>Transformer Block (x8)</div> "]
         direction LR
-        C --> LN1["RMSNorm"]
-        subgraph Attn ["Conv-Attention"]
+        C --> LN1["<div class='node-html'><div class='node-icon'>⚖️</div><div class='node-title'>RMSNorm</div></div>"]
+        
+        subgraph Attn [" <div class='section-title' style='color:rgba(0,255,255,0.3)'>Conv-Attention</div> "]
             direction LR
-            LN1 --> PROJ["C_Attn Linear"]
-            PROJ -- Q --> S1["Q Split"]
-            PROJ -- K --> S2["K Split"]
-            PROJ -- V --> S3["V Split"]
-            PROJ -- I --> S4["I Split"]
-            S1 --> CQ["K${convK} DepthConv"]
-            S2 --> CK["K${convK} DepthConv"]
-            S3 --> CV["K${convK} DepthConv"]
-            S4 --> CI["K${convK} DepthConv"]
+            LN1 --> PROJ["<div class='node-html'><div class='node-icon'>⚙️</div><div class='node-title'>C_Attn</div><div class='node-sub'>Linear Proj</div></div>"]
+            
+            PROJ -- Q --> S1["Split"]
+            PROJ -- K --> S2["Split"]
+            PROJ -- V --> S3["Split"]
+            PROJ -- I --> S4["Split"]
+            
+            S1 --> CQ["<div class='node-html'><div class='node-icon'>🧿</div><div class='node-title'>DepthConv</div><div class='node-sub'>k=${convK}</div></div>"]
+            S2 --> CK["<div class='node-html'><div class='node-icon'>🧿</div><div class='node-title'>DepthConv</div><div class='node-sub'>k=${convK}</div></div>"]
+            S3 --> CV["<div class='node-html'><div class='node-icon'>🧿</div><div class='node-title'>DepthConv</div><div class='node-sub'>k=${convK}</div></div>"]
+            S4 --> CI["<div class='node-html'><div class='node-icon'>🧿</div><div class='node-title'>DepthConv</div><div class='node-sub'>k=${convK}</div></div>"]
+            
             CQ --> ROPE1["RoPE"]
             CK --> ROPE2["RoPE"]
-            ROPE1 --> DOT["Softmax(Q @ Kᵀ / √d)"]
+            
+            ROPE1 --> DOT["<div class='node-html'><div class='node-icon'>🧠</div><div class='node-title'>SDPA</div><div class='node-sub'>Softmax(Q@K)</div></div>"]
             ROPE2 --> DOT
-            DOT --> WV["Attn @ V"]
+            DOT --> WV["<div class='node-html'><div class='node-icon'>📦</div><div class='node-title'>Attn @ V</div></div>"]
             CV --> WV
-            WV --> GATE["${attnGateLabel}"]
+            WV --> GATE["<div class='node-html'><div class='node-icon'>🛡️</div><div class='node-title'>Intent Gate</div><div class='node-sub'>${attnGateLabel}</div></div>"]
             CI --> GATE
-            GATE --> CPR["C_Proj Linear"]
+            GATE --> CPR["<div class='node-html'><div class='node-icon'>⚙️</div><div class='node-title'>C_Proj</div><div class='node-sub'>Head Merge</div></div>"]
         end
-        CPR --> R1["(+) Add"]
+        
+        CPR --> R1["<div class='node-html'><div class='node-icon'>➕</div><div class='node-title'>Add</div></div>"]
         C --> R1
-        R1 --> LN2["RMSNorm"]
-        subgraph Hydra ["Hydra MLP"]
+        
+        R1 --> LN2["<div class='node-html'><div class='node-icon'>⚖️</div><div class='node-title'>RMSNorm</div></div>"]
+        
+        subgraph Hydra [" <div class='section-title' style='color:rgba(255,0,255,0.3)'>Hydra MLP</div> "]
             direction LR
-            LN2 --> HW1["Content W1"]
-            LN2 --> HC9["K${mlpK} DepthConv"]
-            HC9 --> HG["Gate Pattern"]
-            HG --> HM["${mlpGateLabel}"]
+            LN2 --> HW1["<div class='node-html'><div class='node-icon'>🧪</div><div class='node-title'>SwiGLU</div><div class='node-sub'>W1/W3</div></div>"]
+            LN2 --> HC9["<div class='node-html'><div class='node-icon'>🧿</div><div class='node-title'>DepthConv</div><div class='node-sub'>k=${mlpK}</div></div>"]
+            HC9 --> HG["<div class='node-html'><div class='node-icon'>🏮</div><div class='node-title'>Gate</div></div>"]
+            HG --> HM["<div class='node-html'><div class='node-icon'>⚡</div><div class='node-title'>Bilinear</div><div class='node-sub'>${mlpGateLabel}</div></div>"]
             HW1 --> HM
-            HM --> HW2["W2 Linear"]
+            HM --> HW2["<div class='node-html'><div class='node-icon'>⚙️</div><div class='node-title'>W2 Linear</div></div>"]
         end
-        HW2 --> R2["(+) Add"]
+        
+        HW2 --> R2["<div class='node-html'><div class='node-icon'>➕</div><div class='node-title'>Add</div></div>"]
         R1 --> R2
     end
-    R2 --> F["Final Norm"]
-    F --> H["Head"]
-    H --> P["Probs"]`;
+    
+    R2 --> F["<div class='node-html'><div class='node-icon'>⚖️</div><div class='node-title'>Final Norm</div></div>"]
+    F --> H["<div class='node-html'><div class='node-icon'>🏆</div><div class='node-title'>LM Head</div><div class='node-sub'>Linear</div></div>"]
+    H --> P["<div class='node-html'><div class='node-icon'>📊</div><div class='node-title'>Logits</div></div>"]
+    
+    class A,B,C,P,H,F,DOT,WV,GATE,HM,HG,HW1,HW2,HC9,LN1,LN2,CPR,PROJ,S1,S2,S3,S4,CQ,CK,CV,CI,ROPE1,ROPE2,R1,R2 m-norm;
+    class Attn m-attn;
+    class Hydra m-mlp;
+    class Block m-block;
+    `;
 
             let tokenHtml = '';
             if (lastVisData && lastVisData.tokens) {
